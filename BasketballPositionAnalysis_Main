@@ -5,7 +5,6 @@ import numpy as np
 def get_user_stats():
     """Prompts user for specific NBA metrics."""
     print("\n--- Enter Your Per-Game Stats ---")
-    # Mapping for user-friendly prompts to internal keys
     return {
         'fg_pct': float(input("Field Goal Percentage (e.g., 0.45): ")),
         'three_p_pct': float(input("3-Point Percentage (e.g., 0.35): ")),
