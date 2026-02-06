@@ -1,1 +1,77 @@
-print("hi")
+import sqlite3
+import pandas as pd
+import numpy as np
+
+def get_user_stats():
+    """Prompts user for specific NBA metrics."""
+    print("\n--- Enter Your Per-Game Stats ---")
+    # Mapping for user-friendly prompts to internal keys
+    return {
+        'fg_pct': float(input("Field Goal Percentage (e.g., 0.45): ")),
+        'three_p_pct': float(input("3-Point Percentage (e.g., 0.35): ")),
+        'stl': float(input("Steals: ")),
+        'blk': float(input("Blocks: ")),
+        'tov': float(input("Turnovers: ")),
+        'pf': float(input("Personal Fouls: ")),
+        'pts': float(input("Points: ")),
+        'ast': float(input("Assists: ")),
+        'trb': float(input("Total Rebounds: "))
+    }
+
+def find_best_position_fit(user_stats, db_name='basketball.db'):
+    """
+    Analyzes user stats against database averages using Euclidean distance.
+    """
+    try:
+        conn = sqlite3.connect(db_name)
+        
+        query = """
+            SELECT position, 
+                   AVG(fg_pct) as fg_pct, 
+                   AVG(three_p_pct) as three_p_pct, 
+                   AVG(stl) as stl, 
+                   AVG(blk) as blk, 
+                   AVG(tov) as tov, 
+                   AVG(pf) as pf, 
+                   AVG(pts) as pts, 
+                   AVG(ast) as ast, 
+                   AVG(trb) as trb
+            FROM nba_players 
+            GROUP BY position
+        """
+        pos_averages = pd.read_sql(query, conn)
+        conn.close()
+
+        if pos_averages.empty:
+            print("No data found in database.")
+            return
+
+        stat_columns = ['fg_pct', 'three_p_pct', 'stl', 'blk', 'tov', 'pf', 'pts', 'ast', 'trb']
+        user_values = np.array([user_stats[s] for s in stat_columns])
+        
+        comparison_results = []
+
+        for _, row in pos_averages.iterrows():
+            pos_values = row[stat_columns].values.astype(float)
+            
+            # square root of the sum of squared differences
+            distance = np.linalg.norm(user_values - pos_values)
+            
+            comparison_results.append({
+                'Position': row['position'],
+                'Distance Score': round(distance, 2)
+            })
+
+        results_df = pd.DataFrame(comparison_results).sort_values('Distance Score')
+        
+        print(f"\nAnalysis Complete!")
+        print(f"You play most like a: **{results_df.iloc[0]['Position']}**")
+        print("\nSimilarity Table (Lower Score = Closer Match):")
+        print(results_df.to_string(index=False))
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+if __name__ == "__main__":
+    user_input = get_user_stats()
+    find_best_position_fit(user_input)
