@@ -10,37 +10,26 @@ stats_sf = {}
 stats_sg = {}
 stats_pg = {}
 
+for j in [stats_c, stats_pf, stats_sf, stats_sg, stats_pg]:
+    if j == stats_c:
+        selected_rows = df.iloc[1:103]
+        position = 'C'
+    elif j == stats_pf:
+        selected_rows = df.iloc[104:211]
+        position = 'PF'
+    elif j == stats_sf:
+        selected_rows = df.iloc[212:311]
+        position = 'SF'
+    elif j == stats_sg:
+        selected_rows = df.iloc[312:415]
+        position = 'SG'
+    elif j == stats_pg:
+        selected_rows = df.iloc[416:569]
+        position = 'PG'
+    for i in stats:
+        average_value = selected_rows[i].mean()
+        if i != 'Field Goal Percentage' and i != '3P%':
+            average_value = average_value/48 # Divide by the number of minutes in an NBA basketball game
+        j[i] = round(average_value, 5) 
 
-for i in stats:
-    selected_rows = df.iloc[1:103]
-    average_value = selected_rows[i].mean()
-    stats_c[i] = average_value
-
-print(f"These are the stats for position C: {stats_c}")
-
-for i in stats:
-    selected_rows = df.iloc[104:211]
-    average_value = selected_rows[i].mean()
-    stats_pf[i] = average_value
-
-print(f"These are the stats for position PF: {stats_pf}")
-
-for i in stats:
-    selected_rows = df.iloc[212:311]
-    average_value = selected_rows[i].mean()
-    stats_pg[i] = average_value
-
-print(f"These are the stats for position PG: {stats_pg}")
-for i in stats:
-    selected_rows = df.iloc[312:415]
-    average_value = selected_rows[i].mean()
-    stats_sf[i] = average_value
-
-print(f"These are the stats for position SF: {stats_sf}")
-
-for i in stats:
-    selected_rows = df.iloc[416:569]
-    average_value = selected_rows[i].mean()
-    stats_sg[i] = average_value
-
-print(f"These are the stats for position SG: {stats_sg}")
+    print(f"These are the stats for position {position}: {j}")
