@@ -1,7 +1,7 @@
 import pandas as pd
-# 3 points pecentage, steals, blocks, turnovers, personal fouls, points, assists, rebounds, field goal percentage
+
+# 3 points percentage, steals, blocks, turnovers, personal fouls, points, assists, rebounds, field goal percentage
 # 1. Load the CSV file into a DataFrame
-# Replace 'your_file.csv' with the actual path to your file
 df = pd.read_csv('nba_stats.csv')
 stats = ['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']
 stats_c = {}
@@ -10,7 +10,8 @@ stats_sf = {}
 stats_sg = {}
 stats_pg = {}
 
-for j in [stats_c, stats_pf, stats_sf, stats_sg, stats_pg]:
+positions = [stats_c, stats_pf, stats_sf, stats_sg, stats_pg]
+for j in positions:
     if j == stats_c:
         selected_rows = df.iloc[1:103]
         position = 'C'
@@ -31,5 +32,3 @@ for j in [stats_c, stats_pf, stats_sf, stats_sg, stats_pg]:
         if i != 'Field Goal Percentage' and i != '3P%':
             average_value = average_value/48 # Divide by the number of minutes in an NBA basketball game
         j[i] = round(average_value, 5) 
-
-    print(f"These are the stats for position {position}: {j}")
