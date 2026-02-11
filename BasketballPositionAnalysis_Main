@@ -1,76 +1,88 @@
-import sqlite3
-import pandas as pd
-import numpy as np
+# Import average statistics for each position from the average_stat module
+from average_stat import positions
+import numpy as np  
 
+# Function to collect user's basketball statistics as input
 def get_user_stats():
     """Prompts user for specific NBA metrics."""
-    print("\n--- Enter Your Per-Game Stats ---")
-    return {
-        'fg_pct': float(input("Field Goal Percentage (e.g., 0.45): ")),
-        'three_p_pct': float(input("3-Point Percentage (e.g., 0.35): ")),
-        'stl': float(input("Steals: ")),
-        'blk': float(input("Blocks: ")),
-        'tov': float(input("Turnovers: ")),
-        'pf': float(input("Personal Fouls: ")),
-        'pts': float(input("Points: ")),
-        'ast': float(input("Assists: ")),
-        'trb': float(input("Total Rebounds: "))
+
+    print("\n--- Enter Your Per-Game Stats ---")  # Display header message
+    # Return a dictionary containing all user-entered statistics as floats
+    
+    fg_pct = float(input("Field Goal Percentage (e.g., 0.45): "))  # User input for field goal percentage
+    three_p_pct = float(input("3-Point Percentage (e.g., 0.35): "))  # User input for three-point percentage
+    stl = float(input("Steals: "))  # User input for steals per game
+    blk = float(input("Blocks: "))  # User input for blocks per game
+    tov = float(input("Turnovers: "))  # User input for turnovers per game
+    pf = float(input("Personal Fouls: "))  # User input for personal fouls per game
+    pts = float(input("Points: "))  # User input for points per game
+    ast = float(input("Assists: "))  # User input for assists per game
+    trb = float(input("Total Rebounds: "))  # User input for total rebounds per game
+    min = int(input("Game Length: "))  # User input for minutes played per game
+
+    user_stats = {
+        'Field Goal Percentage': fg_pct,
+        '3P%': three_p_pct,
+        'STL': stl / min,
+        'BLK': blk / min,       
+        'TOV': tov / min,
+        'PF': pf / min,             
+        'Points': pts / min,
+        'AST': ast / min,
+        'TRB': trb / min    
     }
 
-def find_best_position_fit(user_stats, db_name='basketball.db'):
+    return user_stats # Return the list of user statistics for further analysis
+
+# Function to determine the best position fit based on user statistics
+def find_best_position_fit(user_stats, positions):
     """
     Analyzes user stats against database averages using Euclidean distance.
     """
-    try:
-        conn = sqlite3.connect(db_name)
-        
-        query = """
-            SELECT position, 
-                   AVG(fg_pct) as fg_pct, 
-                   AVG(three_p_pct) as three_p_pct, 
-                   AVG(stl) as stl, 
-                   AVG(blk) as blk, 
-                   AVG(tov) as tov, 
-                   AVG(pf) as pf, 
-                   AVG(pts) as pts, 
-                   AVG(ast) as ast, 
-                   AVG(trb) as trb
-            FROM nba_players 
-            GROUP BY position
-        """
-        pos_averages = pd.read_sql(query, conn)
-        conn.close()
 
-        if pos_averages.empty:
-            print("No data found in database.")
-            return
+    comparisons = [[0]*9 for _ in range(5)]  # Initialize a 5x9 matrix to store percentage differences
 
-        stat_columns = ['fg_pct', 'three_p_pct', 'stl', 'blk', 'tov', 'pf', 'pts', 'ast', 'trb']
-        user_values = np.array([user_stats[s] for s in stat_columns])
-        
-        comparison_results = []
 
-        for _, row in pos_averages.iterrows():
-            pos_values = row[stat_columns].values.astype(float)
-            
-            # square root of the sum of squared differences
-            distance = np.linalg.norm(user_values - pos_values)
-            
-            comparison_results.append({
-                'Position': row['position'],
-                'Distance Score': round(distance, 2)
-            })
+    for i, j in enumerate(positions):
+        for a, b in enumerate(['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']):
+            comparisons[i][a] = (abs(user_stats[b] - j[b]))/j[b] 
+    
+    positionComparisons = np.mean(comparisons, axis=1)  # Calculate the mean percentage difference for each position
 
-        results_df = pd.DataFrame(comparison_results).sort_values('Distance Score')
-        
-        print(f"\nAnalysis Complete!")
-        print(f"You play most like a: **{results_df.iloc[0]['Position']}**")
-        print("\nSimilarity Table (Lower Score = Closer Match):")
-        print(results_df.to_string(index=False))
+    bestFit = positionComparisons[0]
+    bestFitIndex = 0
 
-    except Exception as e:
-        print(f"Error: {e}")
+    for i, j in enumerate(positionComparisons):
+        if bestFit > j:
+            bestFit = j
+            bestFitIndex = i # Find the index of the position with the smallest mean percentage difference 
 
-if __name__ == "__main__":
-    user_input = get_user_stats()
-    find_best_position_fit(user_input)
+    print("\n--- Best Position Fit ---")  # Display header message for best position fit
+    if bestFitIndex == 0:
+        print("Your best position fit is: Center (C)")  # Output if the best fit is Center
+    elif bestFitIndex == 1:
+        print("Your best position fit is: Power Forward (PF)")  # Output if the best fit is Power Forward
+    elif bestFitIndex == 2:
+        print("Your best position fit is: Small Forward (SF)")  # Output if the best fit is Small Forward
+    elif bestFitIndex == 3:
+        print("Your best position fit is: Shooting Guard (SG)")  # Output if the best fit is Shooting Guard
+    elif bestFitIndex == 4:
+        print("Your best position fit is: Point Guard (PG)")  # Output if the best fit is Point Guard   
+
+    statistics = ['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']
+
+    for i in range(1, len(comparisons[bestFitIndex])):
+        key = comparisons[bestFitIndex][i]
+        key_stat = statistics[i]
+        j = i -1
+        while (j>0 and key<comparisons[bestFitIndex][j]):
+            comparisons[bestFitIndex][j + 1] = comparisons[bestFitIndex][j]
+            statistics[j + 1] = statistics[j]
+            j -= 1
+        comparisons[bestFitIndex][j + 1]= key
+        statistics[j + 1] = key_stat
+
+    print(f"Statistics needing improvement: 1. {statistics[-1]}, 2. {statistics[-2]}, 3. {statistics[-3]}")  # Output the top three statistics that are closest to the average for the best fit position
+    print(f"Statistics that are above average: 1. {statistics[0]}, 2. {statistics[1]}, 3. {statistics[2]}")  # Output the top three statistics that are furthest from the average for the best fit position
+
+find_best_position_fit(get_user_stats(), positions)
