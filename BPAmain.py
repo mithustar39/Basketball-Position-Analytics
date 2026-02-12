@@ -45,9 +45,9 @@ def find_best_position_fit(user_stats, positions):
 
     for i, j in enumerate(positions):
         for a, b in enumerate(['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']):
-            comparisons[i][a] = (abs(user_stats[b] - j[b]))/j[b] 
-    
-    positionComparisons = np.mean(comparisons, axis=1)  # Calculate the mean percentage difference for each position
+            comparisons[i][a] = (user_stats[b] - j[b])/j[b] 
+    absComparisons = np.abs(comparisons)  # Take the absolute value of the percentage differences
+    positionComparisons = np.mean(absComparisons, axis=1)  # Calculate the mean percentage difference for each position
 
     bestFit = positionComparisons[0]
     bestFitIndex = 0
@@ -81,6 +81,8 @@ def find_best_position_fit(user_stats, positions):
             j -= 1
         comparisons[bestFitIndex][j + 1]= key
         statistics[j + 1] = key_stat
+
+
 
     print(f"Statistics needing improvement: 1. {statistics[-1]}, 2. {statistics[-2]}, 3. {statistics[-3]}")  # Output the top three statistics that are closest to the average for the best fit position
     print(f"Statistics that are above average: 1. {statistics[0]}, 2. {statistics[1]}, 3. {statistics[2]}")  # Output the top three statistics that are furthest from the average for the best fit position
