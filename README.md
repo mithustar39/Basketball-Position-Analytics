@@ -4,7 +4,7 @@ An analytics web app being built with **FastAPI** and **SQLite** that uses histo
 
 
 
-### 🏗 Tech Stack
+### Tech Stack
 * **Backend:** FastAPI (Python)
 * **Database:** SQLite3
 * **Frontend:** HTML5, CSS, JavaScript
