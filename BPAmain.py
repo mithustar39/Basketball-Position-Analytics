@@ -1,6 +1,7 @@
 # Import average statistics for each position from the average_stat module
 from average_stat import positions
 import numpy as np  
+import sqlite3
 
 # Function to collect user's basketball statistics as input
 def get_user_stats():
@@ -86,5 +87,24 @@ def find_best_position_fit(user_stats, positions):
 
     print(f"Statistics needing improvement: 1. {statistics[-1]}, 2. {statistics[-2]}, 3. {statistics[-3]}")  # Output the top three statistics that are closest to the average for the best fit position
     print(f"Statistics that are above average: 1. {statistics[0]}, 2. {statistics[1]}, 3. {statistics[2]}")  # Output the top three statistics that are furthest from the average for the best fit position
+""" Need to finish (Nishanth)
+def compareSpecificPlayer(user_stats, positions): 
+    
 
+    conn  = sqlite3.connect('basketball.db')
+    
+    cursor = conn.cursor()
+    
+    playerName = input("Please enter the first and last name of the player you wish to compare with: ")
+    
+    # need to make case sensitive and change to the main file so that it can access all of the lists andb stuff to directly compare and output
+    cursor.execute("SELECT * FROM players WHERE name =?", (playerName,))
+    rows = cursor.fetchall()
+    
+    
+    for row in rows:
+        print(row)
+    
+    conn.close()
+"""
 find_best_position_fit(get_user_stats(), positions)
