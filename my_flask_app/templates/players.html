@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block title %}NBA Player Database{% endblock %}
+
+{% block content %}
+<div class="players-section">
+    <h1>NBA Player Database</h1>
+
+    <form action="{{ url_for('players') }}" method="GET" class="search-form">
+        <input type="text" name="search" placeholder="Search by player name..." value="{{ request.args.get('search', '') }}">
+        
+        <select name="position">
+            <option value="">All Positions</option>
+            <option value="PG" {% if request.args.get('position') == 'PG' %}selected{% endif %}>Point Guard</option>
+            <option value="SG" {% if request.args.get('position') == 'SG' %}selected{% endif %}>Shooting Guard</option>
+            <option value="SF" {% if request.args.get('position') == 'SF' %}selected{% endif %}>Small Forward</option>
+            <option value="PF" {% if request.args.get('position') == 'PF' %}selected{% endif %}>Power Forward</option>
+            <option value="C" {% if request.args.get('position') == 'C' %}selected{% endif %}>Center</option>
+        </select>
+
+        <button type="submit">Filter</button>
+    </form>
+    
+    <div class="player-grid">
+        {% if players %}
+            {% for player in players %}
+            <div class="player-card">
+                <div class="icon">🏀</div>
+                <h3>{{ player.player_name }}</h3>
+                <p><strong>Position:</strong> {{ player.position }}</p>
+                <p><strong>PPG:</strong> {{ player.pts }}</p>
+                <button class="view-stats" 
+                    data-name="{{ player.player_name }}"
+                    data-pts="{{ player.pts }}" 
+                    data-ast="{{ player.ast }}" 
+                    data-trb="{{ player.trb }}" 
+                    data-stl="{{ player.stl }}" 
+                    data-blk="{{ player.blk }}"
+                    data-fgpct="{{ player.fg_pct }}"
+                    data-tp_pct="{{ player.three_p_pct }}"
+                    data-tov="{{ player.tov }}"
+                    data-pf="{{ player.pf }}">
+                    View Radar Chart
+                </button>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No players found matching your search.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div id="chartModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modalPlayerName">Player Stats</h2>
+        <canvas id="radarChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/radar.js') }}"></script>
+
+{% endblock %}
