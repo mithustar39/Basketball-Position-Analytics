@@ -1,9 +1,190 @@
-body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f8f9fa; }
-nav { background: #222; color: white; padding: 1rem; display: flex; justify-content: space-between; }
-nav ul { list-style: none; display: flex; gap: 20px; }
-nav a { color: orange; text-decoration: none; font-weight: bold; }
+/* =========================================
+   1. GLOBAL STYLES & RESETS
+   ========================================= */
+body { 
+    font-family: 'Bebas Neue', sans-serif; 
+    margin: 0; 
+    padding: 0;
+    background: #f8f9fa; 
+}
+.container { 
+    max-width: 1000px; 
+    margin: 40px auto; 
+    padding: 20px; 
+}
 
-.container { max-width: 1000px; margin: 40px auto; padding: 20px; }
-.hero { text-align: center; background: white; padding: 50px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-.stat-card { border: 1px solid #ddd; padding: 20px; border-radius: 8px; display: inline-block; min-width: 150px; margin: 10px; }
-.stat-number { font-size: 2rem; color: #e65100; font-weight: bold; }
+/* =========================================
+   2. NAVIGATION BAR
+   ========================================= */
+.logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+}
+
+.logo .emoji {
+    font-size: 1.8rem;
+    margin-right: 8px;
+}
+
+nav { 
+    background: #222; 
+    color: white; 
+    padding: 1rem; 
+    display: flex; 
+    justify-content: space-between; 
+}
+
+nav ul { 
+    list-style: none; 
+    display: flex; 
+    gap: 20px; 
+}
+
+nav a { 
+    color: orange; 
+    text-decoration: none; 
+    font-weight: bold; 
+}
+
+/* =========================================
+   3. HERO SECTION & STAT CARDS (Players Page)
+   ========================================= */
+.hero { 
+    text-align: center; 
+    background: white; 
+    padding: 50px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+}
+
+.stat-card { 
+    border: 1px solid #ddd; 
+    padding: 20px; 
+    border-radius: 8px; 
+    display: inline-block; 
+    min-width: 150px; 
+    margin: 10px; 
+}
+
+.stat-number { 
+    font-size: 2rem; 
+    color: #e65100; 
+    font-weight: bold; 
+}
+
+/* =========================================
+   4. SEARCH & FILTERING
+   ========================================= */
+.search-form {
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.search-form input {
+    padding: 10px;
+    width: 300px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.search-form button {
+    padding: 10px 20px;
+    background-color: #e65100;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* =========================================
+   5. PLAYER GRID & CARDS
+   ========================================= */
+.player-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.player-card {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+}
+
+.view-stats {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    background: #222;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+/* =========================================
+   6. MODAL & RADAR CHART (Analytics)
+   ========================================= */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px; 
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+#radarChart {
+    max-height: 400px; 
+    margin-bottom: 10px;
+}
+
+.close {
+    position: fixed;
+    right: 15px;
+    top: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+/* =========================================
+   7. FOOTER (Bottom-Left Pinned)
+   ========================================= */
+footer {
+    position: fixed;
+    bottom: -3px;
+    left: 5px;
+    padding: 1px 1px;
+    color: #000000;
+    margin: 0;
+    font-size: 11px;
+    z-index: 1000;
+}
