@@ -26,7 +26,7 @@ def players():
     filtered_df = df.copy()
 
     if search:
-        filtered_df = filtered_df[filtered_df['name'].str.lower().str.contains(search)]
+        filtered_df = filtered_df[filtered_df['player_name'].str.lower().str.contains(search)]
     
     if position:
         filtered_df = filtered_df[filtered_df['position'] == position]
