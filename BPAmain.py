@@ -1,7 +1,9 @@
-# Import average statistics for each position from the average_stat module
-from average_stat import positions
-import numpy as np  
+from average_stat import positions, stats
+import numpy as np
+import pandas  
 import sqlite3
+
+statTypes = ['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']
 
 # Function to collect user's basketball statistics as input
 def get_user_stats():
@@ -36,7 +38,7 @@ def get_user_stats():
     return user_stats # Return the list of user statistics for further analysis
 
 # Function to determine the best position fit based on user statistics
-def find_best_position_fit(user_stats, positions):
+def find_best_position_fit(user_stats, positions, statTypes):
     """
     Analyzes user stats against database averages using Euclidean distance.
     """
@@ -45,7 +47,7 @@ def find_best_position_fit(user_stats, positions):
 
 
     for i, j in enumerate(positions):
-        for a, b in enumerate(['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']):
+        for a, b in enumerate(statTypes):
             comparisons[i][a] = (user_stats[b] - j[b])/j[b] 
     absComparisons = np.abs(comparisons)  # Take the absolute value of the percentage differences
     positionComparisons = np.mean(absComparisons, axis=1)  # Calculate the mean percentage difference for each position
@@ -87,8 +89,8 @@ def find_best_position_fit(user_stats, positions):
 
     print(f"Statistics needing improvement: 1. {statistics[-1]}, 2. {statistics[-2]}, 3. {statistics[-3]}")  # Output the top three statistics that are closest to the average for the best fit position
     print(f"Statistics that are above average: 1. {statistics[0]}, 2. {statistics[1]}, 3. {statistics[2]}")  # Output the top three statistics that are furthest from the average for the best fit position
-""" Need to finish (Nishanth)
-def compareSpecificPlayer(user_stats, positions): 
+
+def compareSpecificPlayer(user_stats, statTypes): 
     
 
     conn  = sqlite3.connect('basketball.db')
@@ -96,15 +98,46 @@ def compareSpecificPlayer(user_stats, positions):
     cursor = conn.cursor()
     
     playerName = input("Please enter the first and last name of the player you wish to compare with: ")
+    playerStats = {}
     
-    # need to make case sensitive and change to the main file so that it can access all of the lists andb stuff to directly compare and output
-    cursor.execute("SELECT * FROM players WHERE name =?", (playerName,))
-    rows = cursor.fetchall()
-    
-    
-    for row in rows:
-        print(row)
-    
+    # query the correct table and column names from the imported CSV
+    cursor.execute("SELECT * FROM nba_players WHERE player_name = ?", (playerName,))
+    player = cursor.fetchone()
+
+    if player:
+        # turn row into dict for readable output
+        columns = [description[0] for description in cursor.description]
+        player_dict = dict(zip(columns, player))
+    else:
+        print("Player not found.")
+
+    comparisonsSpecific = [[0]*len(statTypes) for _ in range(1)]  # Initialize a 1xN matrix for percentage differences
+
+    # help with github chat so learn :
+    # database columns corresponding to the human-readable stat names
+    statNameTemp = ['fg_pct', 'three_p_pct', 'stl', 'blk', 'tov', 'pf', 'pts', 'ast', 'orb']
+    # create a mapping from display names -> db keys
+    stat_map = dict(zip(statTypes, statNameTemp))
+
+    # convert player stats from strings to floats using the db field names
+    for stat in statTypes:
+        db_key = stat_map[stat]
+        # some rows may lack the key (unlikely), so use get with default 0
+        player_dict[db_key] = float(player_dict.get(db_key, 0))
+
+    # compute percent differences using mapped keys for the player data
+    for a, stat in enumerate(statTypes):
+        user_val = user_stats[stat]
+        player_val = player_dict[stat_map[stat]]
+        comparisonsSpecific[0][a] = (user_val - player_val) / player_val if player_val != 0 else 0
+    absComparisons = np.abs(comparisonsSpecific)  # Take the absolute value of the percentage differences
+    playerComparisons = np.mean(absComparisons, axis=1)  # Calculate the mean percentage difference for each position
+
+    print("Mean Percent Difference:")
+    print(playerComparisons)
+
     conn.close()
-"""
-find_best_position_fit(get_user_stats(), positions)
+
+    
+    
+compareSpecificPlayer(get_user_stats(), statTypes)
