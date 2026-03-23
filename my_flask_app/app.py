@@ -8,8 +8,7 @@ def get_db_data(db_name = 'basketball.db'):
     # Connect to your database file
     conn = sqlite3.connect(db_name) 
     
-    # Read the entire table into a DataFrame
-    # Replace 'nba_stats' with the actual name of the table inside your .db file
+
     query = "SELECT * FROM nba_players"
     df = pd.read_sql_query(query, conn)
     
