@@ -7,8 +7,5 @@ Werkzeug==3.0.3
 pandas==2.2.2
 numpy==1.26.4
 
-# For Data Visualization (Radar Chart)
-chart.js==4.5.1
-
 # Environment Management
 python-dotenv==1.0.1
