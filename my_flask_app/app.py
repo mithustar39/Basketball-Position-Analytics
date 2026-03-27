@@ -41,9 +41,30 @@ def home():
 def about():
     return render_template('about.html')
 
-@app.route('/stats')
-def stats():
-    return render_template('stats.html')
+@app.route('/analytics', methods=['GET', 'POST'])
+def analytics():
+    if request.method == 'POST':
+        # grab the numbers table
+        # We use float() because the input comes in as a string
+        try:
+            user_stats = {
+                'fg_pct': float(request.form.get('fg_pct', 0)),
+                'three_p_pct': float(request.form.get('three_p_pct', 0)),
+                'pts': float(request.form.get('pts', 0)),
+                'ast': float(request.form.get('ast', 0)),
+                'trb': float(request.form.get('trb', 0)),
+                'stl': float(request.form.get('stl', 0)),
+                'blk': float(request.form.get('blk', 0)),
+                'tov': float(request.form.get('tov', 0)),
+                'pf': float(request.form.get('pf', 0))
+            }
+            
+            return render_template('results.html', stats=user_stats)
+            
+        except ValueError:
+            return "Please enter valid numbers in all fields."
+
+    return render_template('analytics.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
