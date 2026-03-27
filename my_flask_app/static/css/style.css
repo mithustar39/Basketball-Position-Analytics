@@ -188,3 +188,83 @@ footer {
     font-size: 11px;
     z-index: 1000;
 }
+
+/* =========================================
+   8. Analytics Page
+   ========================================= */
+
+/* General Layout */
+:root {
+    --primary-color: #e65100;
+    --secondary-color: #222;  
+    --bg-color: #f8f9fa;      
+    --card-bg: #ffffff;
+    --text-color: #333;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+/* Card Styling */
+.card {
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Table Styling */
+.analytics-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.analytics-table th {
+    text-align: left;
+    padding: 12px;
+    border-bottom: 2px solid var(--primary-color);
+    color: var(--secondary-color);     
+}
+
+.analytics-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #eee;
+}
+
+/* Input Styling */
+input[type="number"] {
+    width: 100px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    outline-color: var(--primary-color);
+}
+
+.tip {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+}
+
+/* Button Styling */
+.analyze-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.analyze-btn:hover {
+    background-color: #bf360c;
+}
