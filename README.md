@@ -21,8 +21,13 @@ An analytics web app being built with **FastAPI** and **SQLite** that uses histo
 
 ### How to Launch
 python -m venv .venv
+
 .\.venv\Scripts\Activate.ps1
+
 pip install Flask pandas numpy python-dotenv
+
 python init_db.py (this creates/updates basketball.db)
+
 Start the web app from the root folder: python my_flask_app/app.py
+
 Open http://127.0.0.1:5000/ in your browser
