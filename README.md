@@ -17,17 +17,3 @@ An analytics web app being built with **FastAPI** and **SQLite** that uses histo
 
 **The  Solution:** Pipeline that digests NBA performance trends (Points, Rebounds, Assists, True Shooting %, etc.). The system uses these data points to calculate a "Similarity Score" between the user and professional player profiles, outputting a data-backed training roadmap based on successful NBA patterns.
 
---
-
-### How to Launch
-python -m venv .venv
-
-.\.venv\Scripts\Activate.ps1
-
-pip install Flask pandas numpy python-dotenv
-
-python init_db.py (this creates/updates basketball.db)
-
-Start the web app from the root folder: python my_flask_app/app.py
-
-Open http://127.0.0.1:5000/ in your browser

@@ -2,7 +2,7 @@ import sqlite3
 import pandas as pd
 import os
 
-def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
+def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db', if_exists='replace'):
     """
     Imports NBA player statistics from a CSV file into a SQLite database.
 
@@ -15,6 +15,7 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
     Args:
         csv_filepath (str): The path to the source CSV file. Defaults to 'nba_stats.csv'.
         db_name (str): The name of the SQLite database file. Defaults to 'basketball.db'.
+        if_exists (str): Behavior when the table already exists. Defaults to 'replace'.
 
     Returns:
         None
@@ -41,14 +42,23 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
         mapping = {
             'Rk': 'rk',
             'Player': 'player_name',
+            'Pos': 'position',
             'Position': 'position',
+            'G': 'games_played',
             'Game': 'games_played',
+            'GS': 'games_started',
             'Games Started': 'games_started',
+            'MP': 'mins_played',
             'Mins Played': 'mins_played',
+            'FG': 'field_goals',
             'Field Goals': 'field_goals',
+            'FGA': 'fg_attempts',
             'Field Goal Attempts': 'fg_attempts',
+            'FG%': 'fg_pct',
             'Field Goal Percentage': 'fg_pct',
+            '3P': 'three_p_made',
             '3-Point Field Goals': 'three_p_made',
+            '3PA': 'three_p_attempts',
             '3-Point Field Goal Attempts': 'three_p_attempts',
             '3P%': 'three_p_pct',
             '2P': 'two_p_made',
@@ -66,6 +76,7 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
             'BLK': 'blk',
             'TOV': 'tov',
             'PF': 'pf',
+            'PTS': 'pts',
             'Points': 'pts',
             'Awards': 'awards'
         }
@@ -79,8 +90,8 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
         df = df.fillna(0)
 
         # Write the cleaned DataFrame to the 'nba_players' table.
-        # 'if_exists=append' allows you to keep existing data and add new records.
-        df.to_sql('nba_players', conn, if_exists='append', index=False)
+        # Default 'replace' ensures updated CSV stats overwrite stale rows.
+        df.to_sql('nba_players', conn, if_exists=if_exists, index=False)
         
         print(f"Successfully imported {len(df)} players with all attributes.")
 
