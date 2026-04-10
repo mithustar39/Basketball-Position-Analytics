@@ -1,18 +1,12 @@
-from pathlib import Path
-
 from flask import Flask, render_template, request
 import pandas as pd
 import sqlite3
 
 app = Flask(__name__)
 
-# db file form 
-DB_PATH = Path(__file__).resolve().parent.parent / "basketball.db"
-
-
-def get_db_data(db_path: Path = DB_PATH):
-    conn = sqlite3.connect(db_path)
-    
+def get_db_data(db_name = 'basketball.db'):
+    # Connect to your database file
+    conn = sqlite3.connect(db_name) 
 
     query = "SELECT * FROM nba_players"
     df = pd.read_sql_query(query, conn)
@@ -21,6 +15,12 @@ def get_db_data(db_path: Path = DB_PATH):
     return df
 
 df = get_db_data()
+
+@app.route('/')
+def home():
+    filtered_df = df.copy()
+    players_list = filtered_df.to_dict(orient='records')
+    return render_template('home.html', players=players_list)
 
 @app.route('/players')
 def players():
@@ -38,20 +38,15 @@ def players():
     players_list = filtered_df.to_dict(orient='records')
     return render_template('players.html', players=players_list)
 
-@app.route('/')
-def home():
-    return render_template('home.html')
-
-@app.route('/about')
-def about():
-    return render_template('about.html')
-
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
+    # Provide players for the select dropdown
+    players_list = df.to_dict(orient='records')
+
     if request.method == 'POST':
-        # grab the numbers table
-        # We use float() because the input comes in as a string
+        # grab the numbers table (input comes in as strings)
         try:
+            minutes = float(request.form.get('minutes', 36))
             user_stats = {
                 'fg_pct': float(request.form.get('fg_pct', 0)),
                 'three_p_pct': float(request.form.get('three_p_pct', 0)),
@@ -61,15 +56,26 @@ def analytics():
                 'stl': float(request.form.get('stl', 0)),
                 'blk': float(request.form.get('blk', 0)),
                 'tov': float(request.form.get('tov', 0)),
-                'pf': float(request.form.get('pf', 0))
+                'pf': float(request.form.get('pf', 0)),
+                'minutes': minutes,
+                'fg_attempts': float(request.form.get('fg_attempts', 15)),
+                'ft_attempts': float(request.form.get('ft_attempts', 5))
             }
-            
-            return render_template('results.html', stats=user_stats)
-            
+
+            # optional compare player selected by name
+            compare_name = request.form.get('compare_player', '')
+            compare_player = None
+            if compare_name:
+                matched = df[df['player_name'] == compare_name]
+                if not matched.empty:
+                    compare_player = matched.iloc[0].to_dict()
+
+            return render_template('results.html', stats=user_stats, compare_player=compare_player)
+
         except ValueError:
             return "Please enter valid numbers in all fields."
 
-    return render_template('analytics.html')
+    return render_template('analytics.html', players=players_list)
 
 if __name__ == '__main__':
     app.run(debug=True)
