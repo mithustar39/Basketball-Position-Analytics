@@ -9,12 +9,18 @@
     
     <div class="dashboard-preview">
         <div class="stat-card">
-            <h3>Active Players</h3>
-            <p class="stat-number">12</p>
+            <h3>NBA Players</h3>
+            <p class="stat-number">{{ players|length }}</p>
         </div>
         <div class="stat-card">
             <h3>Avg PPG</h3>
-            <p class="stat-number">88.5</p>
+            <p class="stat-number">
+                {% if players|length %}
+                    {{ (players|map(attribute='pts')|sum / players|length)|round(1) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
         </div>
     </div>
 </section>
