@@ -268,3 +268,124 @@ input[type="number"] {
 .analyze-btn:hover {
     background-color: #bf360c;
 }
+
+/* =========================================
+   9. RESULTS PAGE & COMPARISON METRICS
+   ========================================= */
+.results-page {
+    padding: 20px;
+}
+
+.results-card {
+    background: var(--card-bg);
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    border-left: 5px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.results-card h2 {
+    color: var(--secondary-color);
+    margin-top: 0;
+    font-size: 1.5rem;
+}
+
+.compare-card {
+    background: linear-gradient(135deg, rgba(230, 81, 0, 0.05) 0%, rgba(34, 34, 34, 0.02) 100%);
+    border: 2px solid var(--primary-color);
+}
+
+.compare-card h2 {
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+}
+
+.stats-list {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+.stats-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f5f5f5;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color);
+    transition: background 0.2s;
+}
+
+.stats-list li:hover {
+    background: #efefef;
+}
+
+.stats-list strong {
+    color: var(--secondary-color);
+    font-weight: 600;
+    min-width: 150px;
+}
+
+.stats-list span {
+    color: #555;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+}
+
+.normalized li,
+.per36 li,
+.efficiency li,
+.ast-to li {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.normalized strong,
+.per36 strong,
+.efficiency strong,
+.ast-to strong {
+    color: var(--primary-color);
+    font-size: 1.05rem;
+}
+
+.efficiency li,
+.ast-to li {
+    border-left: 3px solid #ff9800;
+}
+
+.per36 li {
+    border-left: 3px solid #2196F3;
+}
+
+/* Muted text for descriptions */
+.muted {
+    color: #888;
+    font-size: 0.9rem;
+    font-style: italic;
+    margin-bottom: 15px;
+    font-family: sans-serif;
+}
+
+/* Comparison section titles */
+.results-card h3,
+.compare-card h3 {
+    color: var(--secondary-color);
+    margin-top: 25px;
+    margin-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 8px;
+    font-size: 1.2rem;
+}
+
+/* Grid layout for side-by-side metrics on larger screens */
+@media (min-width: 768px) {
+    .results-card {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
