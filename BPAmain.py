@@ -133,8 +133,8 @@ def compareSpecificPlayer(user_stats, statTypes):
     absComparisons = np.abs(comparisonsSpecific)  # Take the absolute value of the percentage differences
     playerComparisons = np.mean(absComparisons, axis=1)  # Calculate the mean percentage difference for each position
 
-    print("Mean Percent Difference:")
-    print(playerComparisons)
+    # print("Mean Percent Difference:")
+    return (100-playerComparisons)
 
     conn.close()
 

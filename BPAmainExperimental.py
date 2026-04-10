@@ -206,7 +206,7 @@ def clear_player_data(db_name='player.db'):
     Safely deletes all records from the user_analysis table.
     """
     # Double-check confirmation
-    confirm = input("\n⚠️ WARNING: This will delete ALL your saved progress. Type 'DELETE' to confirm: ")
+    confirm = input("\n WARNING: This will delete ALL your saved progress. Type 'DELETE' to confirm: ")
     
     if confirm == 'DELETE':
         try:
@@ -221,11 +221,11 @@ def clear_player_data(db_name='player.db'):
             
             conn.commit()
             conn.close()
-            print("\n✅ Database cleared successfully. You are starting with a clean slate.")
+            print("\n Database cleared successfully.")
         except sqlite3.Error as e:
             print(f"Error clearing database: {e}")
     else:
-        print("\nOperation cancelled. Your data is safe.")
+        print("cancelled. ")
 
 def main_menu():
     """
