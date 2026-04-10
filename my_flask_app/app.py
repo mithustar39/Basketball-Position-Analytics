@@ -1,12 +1,17 @@
+from pathlib import Path
+
 from flask import Flask, render_template, request
 import pandas as pd
 import sqlite3
 
 app = Flask(__name__)
 
-def get_db_data(db_name = 'basketball.db'):
-    # Connect to your database file
-    conn = sqlite3.connect(db_name) 
+# db file form 
+DB_PATH = Path(__file__).resolve().parent.parent / "basketball.db"
+
+
+def get_db_data(db_path: Path = DB_PATH):
+    conn = sqlite3.connect(db_path)
     
 
     query = "SELECT * FROM nba_players"
