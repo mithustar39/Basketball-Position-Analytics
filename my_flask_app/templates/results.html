@@ -161,11 +161,11 @@
 		</ul>
 
 		<h3>True Shooting % (TS%)</h3>
-		<p class="muted">Efficiency metric: PTS / (2 × (FTA + 0.44 × FGA)). Higher is better.</p>
+		<p class="muted">Efficiency metric: PTS / (2 × (FGA + 0.44 × FTA)). Higher is better.</p>
 		<ul class="stats-list efficiency">
 			<li>
 				<strong>Your TS%:</strong>
-				{% set user_denominator = 2 * (stats.ft_attempts + 0.44 * stats.fg_attempts) %}
+				{% set user_denominator = 2 * (stats.fg_attempts + 0.44 * stats.ft_attempts) %}
 				{% if user_denominator != 0 %}
 					{{ ((stats.pts / user_denominator) * 100)|round(1) }}%
 				{% else %}
@@ -176,7 +176,7 @@
 				<strong>Player TS%:</strong>
 				{% set player_fga = compare_player.fg_attempts if compare_player.fg_attempts else 0 %}
 				{% set player_fta = compare_player.ft_attempts if compare_player.ft_attempts else 0 %}
-				{% set player_denominator = 2 * (player_fta + 0.44 * player_fga) %}
+				{% set player_denominator = 2 * (player_fga + 0.44 * player_fta) %}
 				{% if player_denominator != 0 %}
 					{{ ((compare_player.pts / player_denominator) * 100)|round(1) }}%
 				{% else %}
