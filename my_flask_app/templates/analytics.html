@@ -10,6 +10,37 @@
     </header>
 
     <form action="{{ url_for('analytics') }}" method="POST" class="stats-form">
+        <div class="compare-select">
+            <label for="compare_player">Compare to player:</label>
+            <select name="compare_player" id="compare_player">
+                <option value="">-- None --</option>
+                {% for player in players %}
+                <option value="{{ player.player_name }}">{{ player.player_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="card">
+            <h2>Pace Info</h2>
+            <table class="analytics-table">
+                <tbody>
+                    <tr>
+                        <td>Minutes Played (per game)</td>
+                        <td><input type="number" name="minutes" min="1" max="48" step="0.1" value="36" required></td>
+                        <td class="tip">Your average minutes per game</td>
+                    </tr>
+                    <tr>
+                        <td>Field Goal Attempts (per game)</td>
+                        <td><input type="number" name="fg_attempts" min="0" max="50" step="0.1" value="15" required></td>
+                        <td class="tip">Your FGA per game</td>
+                    </tr>
+                    <tr>
+                        <td>Free Throw Attempts (per game)</td>
+                        <td><input type="number" name="ft_attempts" min="0" max="30" step="0.1" value="5" required></td>
+                        <td class="tip">Your FTA per game</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <div class="card">
             <h2>Enter Your Statistics</h2>
             <table class="analytics-table">
