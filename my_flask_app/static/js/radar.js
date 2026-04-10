@@ -2,16 +2,17 @@ let myRadarChart;
 
 document.querySelectorAll('.view-stats').forEach(button => {
     button.addEventListener('click', function() {
+
         const name = this.getAttribute('data-name');
         
         const stats = [
-            parseFloat(this.getAttribute('data-fgpct')) * 100, 
-            parseFloat(this.getAttribute('data-tp_pct')) * 100,
+            parseFloat(this.getAttribute('data-fgpct')) * 10, 
+            parseFloat(this.getAttribute('data-tp_pct')) * 10,
             parseFloat(this.getAttribute('data-stl')),
             parseFloat(this.getAttribute('data-blk')),
             parseFloat(this.getAttribute('data-tov')),
             parseFloat(this.getAttribute('data-pf')),
-            parseFloat(this.getAttribute('data-pts')),
+            parseFloat(this.getAttribute('data-pts')) / 4,
             parseFloat(this.getAttribute('data-ast')),
             parseFloat(this.getAttribute('data-trb'))
         ];
@@ -26,7 +27,7 @@ document.querySelectorAll('.view-stats').forEach(button => {
         myRadarChart = new Chart(ctx, {
             type: 'radar',
             data: {
-                labels: ['FG%', '3P%', 'Steals', 'Blocks', 'TOV', 'Fouls', 'Points', 'Assists', 'Rebounds'],
+                labels: ['FG% (1-10)', '3P% (1-10)', 'Steals', 'Blocks', 'TOV', 'Fouls', 'PPG Rating (1-10)', 'Assists', 'Rebounds'],
                 datasets: [{
                     label: name,
                     data: stats,
@@ -43,7 +44,7 @@ document.querySelectorAll('.view-stats').forEach(button => {
                 scales: {
                     r: {
                         beginAtZero: true,
-                        suggestedMax: 50, 
+                        suggestedMax: 10, 
                         ticks: { display: false },
                         pointLabels: {
                             font: { size: 12, weight: 'bold' },
