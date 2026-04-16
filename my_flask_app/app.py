@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import pandas as pd
 import sqlite3
+from datetime import timedelta
 
 app = Flask(__name__)
+app.secret_key = 'your-secret-key-change-this'
+app.permanent_session_lifetime = timedelta(days=365)
 
 def get_db_data(db_name = 'basketball.db'):
     # Connect to your database file
@@ -40,8 +43,13 @@ def players():
 
 @app.route('/analytics', methods=['GET', 'POST'])
 def analytics():
+    session.permanent = True
     # Provide players for the select dropdown
     players_list = df.to_dict(orient='records')
+
+    # Retrieve saved stats from session
+    saved_stats = session.get('user_stats', {})
+    saved_compare_player = session.get('compare_player_name', '')
 
     if request.method == 'POST':
         # grab the numbers table (input comes in as strings)
@@ -62,8 +70,12 @@ def analytics():
                 'ft_attempts': float(request.form.get('ft_attempts', 5))
             }
 
+            # Save stats to session
+            session['user_stats'] = user_stats
+
             # optional compare player selected by name
             compare_name = request.form.get('compare_player', '')
+            session['compare_player_name'] = compare_name
             compare_player = None
             if compare_name:
                 matched = df[df['player_name'] == compare_name]
@@ -75,7 +87,7 @@ def analytics():
         except ValueError:
             return "Please enter valid numbers in all fields."
 
-    return render_template('analytics.html', players=players_list)
+    return render_template('analytics.html', players=players_list, saved_stats=saved_stats, saved_compare_player=saved_compare_player)
 
 if __name__ == '__main__':
     app.run(debug=True)
