@@ -6,7 +6,7 @@
 <body class="analytics-body">
     <header>
         <h1>Player Analytics</h1>
-        <p>Enter your per-game averages to find your NBA match.</p>
+        <p>Pick the stats you want to compare, then enter only those values.</p>
     </header>
 
     <form action="{{ url_for('analytics') }}" method="POST" class="stats-form">
@@ -16,83 +16,46 @@
             <div id="playerSuggestions" class="player-suggestions"></div>
         </div>
         <div class="card">
-            <h2>Pace Info</h2>
-            <table class="analytics-table">
-                <tbody>
-                    <tr>
-                        <td>Minutes Played (per game)</td>
-                        <td><input type="number" name="minutes" min="1" max="48" step="0.1" value="{{ saved_stats.get('minutes', 36) }}" required></td>
-                        <td class="tip">Your average minutes per game</td>
-                    </tr>
-                    <tr>
-                        <td>Field Goal Attempts (per game)</td>
-                        <td><input type="number" name="fg_attempts" min="0" max="50" step="0.1" value="{{ saved_stats.get('fg_attempts', 15) }}" required></td>
-                        <td class="tip">Your FGA per game</td>
-                    </tr>
-                    <tr>
-                        <td>Free Throw Attempts (per game)</td>
-                        <td><input type="number" name="ft_attempts" min="0" max="30" step="0.1" value="{{ saved_stats.get('ft_attempts', 5) }}" required></td>
-                        <td class="tip">Your FTA per game</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="card">
-            <h2>Enter Your Statistics</h2>
+            <h2>Choose Stats to Compare</h2>
             <table class="analytics-table">
                 <thead>
                     <tr>
+                        <th>Use</th>
                         <th>Category</th>
                         <th>Your Average</th>
                         <th>Helpful Tip</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>Field Goal %</td>
-                        <td><input type="number" name="fg_pct" min="0" max="1" step="0.001" value="{{ saved_stats.get('fg_pct', 0.450) }}" required></td>
-                        <td class="tip">Enter as decimal (e.g. 0.455)</td>
+                    {% for field in stat_fields %}
+                    <tr class="stat-row" data-stat-row="{{ field.key }}">
+                        <td class="stat-toggle-cell">
+                            <label class="stat-toggle-label">
+                                <input
+                                    type="checkbox"
+                                    name="selected_stats"
+                                    value="{{ field.key }}"
+                                    class="stat-toggle"
+                                    {% if field.key in saved_selected_stats %}checked{% endif %}
+                                >
+                                Include
+                            </label>
+                        </td>
+                        <td>{{ field.label }}</td>
+                        <td>
+                            <input
+                                type="number"
+                                name="{{ field.key }}"
+                                min="0"
+                                {% if field.is_percent %}max="1" step="0.001"{% else %}step="0.1"{% endif %}
+                                value="{{ saved_stat_inputs.get(field.key, field.default) }}"
+                                class="stat-input"
+                                data-stat-input="{{ field.key }}"
+                            >
+                        </td>
+                        <td class="tip">{{ field.tip }}</td>
                     </tr>
-                    <tr>
-                        <td>3P %</td>
-                        <td><input type="number" name="three_p_pct" min="0" max="1" step="0.001" value="{{ saved_stats.get('three_p_pct', 0.350) }}" required></td>
-                        <td class="tip">Enter as decimal (e.g. 0.320)</td>
-                    </tr>
-                    <tr>
-                        <td>Points</td>
-                        <td><input type="number" name="pts" min="0" step="0.1" value="{{ saved_stats.get('pts', 15.0) }}" required></td>
-                        <td class="tip">Average points per game</td>
-                    </tr>
-                    <tr>
-                        <td>Assists</td>
-                        <td><input type="number" name="ast" min="0" step="0.1" value="{{ saved_stats.get('ast', 4.0) }}" required></td>
-                        <td class="tip">Total assists per game</td>
-                    </tr>
-                    <tr>
-                        <td>Rebounds</td>
-                        <td><input type="number" name="trb" min="0" step="0.1" value="{{ saved_stats.get('trb', 5.0) }}" required></td>
-                        <td class="tip">Total rebounds per game</td>
-                    </tr>
-                    <tr>
-                        <td>Steals</td>
-                        <td><input type="number" name="stl" min="0" step="0.1" value="{{ saved_stats.get('stl', 1.2) }}" required></td>
-                        <td class="tip">Aggressive defense tracking</td>
-                    </tr>
-                    <tr>
-                        <td>Blocks</td>
-                        <td><input type="number" name="blk" min="0" step="0.1" value="{{ saved_stats.get('blk', 0.5) }}" required></td>
-                        <td class="tip">Rim protection tracking</td>
-                    </tr>
-                    <tr>
-                        <td>Turnovers</td>
-                        <td><input type="number" name="tov" min="0" step="0.1" value="{{ saved_stats.get('tov', 2.0) }}" required></td>
-                        <td class="tip">Ball security (lower is better)</td>
-                    </tr>
-                    <tr>
-                        <td>Fouls</td>
-                        <td><input type="number" name="pf" min="0" step="0.1" value="{{ saved_stats.get('pf', 2.5) }}" required></td>
-                        <td class="tip">Personal fouls per game</td>
-                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
             <button type="submit" class="analyze-btn">Run Comparison Analysis</button>
@@ -104,5 +67,19 @@
         window.playersData = {{ players | tojson | safe }};
     </script>
     <script src="{{ url_for('static', filename='js/player-search.js') }}"></script>
+    <script>
+        document.querySelectorAll('.stat-row').forEach((row) => {
+            const checkbox = row.querySelector('.stat-toggle');
+            const input = row.querySelector('.stat-input');
+
+            const syncState = () => {
+                input.disabled = !checkbox.checked;
+                row.classList.toggle('is-disabled', !checkbox.checked);
+            };
+
+            checkbox.addEventListener('change', syncState);
+            syncState();
+        });
+    </script>
 </body>
 {% endblock %}

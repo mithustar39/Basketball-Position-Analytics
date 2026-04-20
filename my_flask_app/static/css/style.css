@@ -207,6 +207,30 @@ header {
     margin-bottom: 30px;
 }
 
+.stats-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.compare-select {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.compare-select label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.compare-select input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
 /* Card Styling */
 .card {
     background: var(--card-bg);
@@ -234,6 +258,23 @@ header {
     border-bottom: 1px solid #eee;
 }
 
+.stat-toggle-cell {
+    width: 90px;
+}
+
+.stat-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    color: var(--secondary-color);
+    white-space: nowrap;
+}
+
+.stat-row.is-disabled {
+    opacity: 0.6;
+}
+
 /* Input Styling */
 input[type="number"] {
     width: 100px;
@@ -242,6 +283,11 @@ input[type="number"] {
     border-radius: 4px;
     font-size: 1rem;
     outline-color: var(--primary-color);
+}
+
+input[type="number"]:disabled {
+    background: #f3f3f3;
+    cursor: not-allowed;
 }
 
 .tip {
@@ -321,6 +367,10 @@ input[type="number"] {
 
 .stats-list li:hover {
     background: #efefef;
+}
+
+.missing-list li {
+    border-left-color: #999;
 }
 
 .stats-list strong {

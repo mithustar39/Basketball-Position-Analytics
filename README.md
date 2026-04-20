@@ -1,11 +1,11 @@
-An analytics web app being built with **FastAPI** and **SQLite** that uses historical NBA data to recommend positions and training plans. By analyzing patterns and performance in NBA, the program identifies where a player's physical attributes and skill sets align with professional players.
+An analytics web app being built with **Flask** and **SQLite** that uses historical NBA data to recommend positions and training plans. By analyzing patterns and performance in NBA, the program identifies where a player's physical attributes and skill sets align with professional players.
 
 ---
 
 
 
 ### Tech Stack
-* **Backend:** FastAPI (Python)
+* **Backend:** Flask (Python)
 * **Database:** SQLite3
 * **Frontend:** HTML5, CSS, JavaScript
 * **Data Source:** NBA Player Stats 
@@ -20,14 +20,17 @@ An analytics web app being built with **FastAPI** and **SQLite** that uses histo
 --
 
 ### How to Launch
-python -m venv .venv
+py -m venv .venv
 
 .\.venv\Scripts\Activate.ps1
 
-pip install Flask pandas numpy python-dotenv
+py -m pip install --upgrade pip
+py -m pip install -r my_flask_app/requirements.txt
 
 python init_db.py (this creates/updates basketball.db)
 
 Start the web app from the root folder: python my_flask_app/app.py
+
+If PowerShell blocks activation, run `.\.venv\Scripts\activate.bat` from Command Prompt instead.
 
 Open http://127.0.0.1:5000/ in your browser
