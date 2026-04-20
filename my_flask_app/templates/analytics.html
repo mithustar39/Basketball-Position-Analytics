@@ -12,12 +12,8 @@
     <form action="{{ url_for('analytics') }}" method="POST" class="stats-form">
         <div class="compare-select">
             <label for="compare_player">Compare to player:</label>
-            <select name="compare_player" id="compare_player">
-                <option value="">-- None --</option>
-                {% for player in players %}
-                <option value="{{ player.player_name }}" {% if saved_compare_player == player.player_name %}selected{% endif %}>{{ player.player_name }}</option>
-                {% endfor %}
-            </select>
+            <input type="text" name="compare_player" id="compare_player" placeholder="Search player name..." value="{{ saved_compare_player }}" autocomplete="off">
+            <div id="playerSuggestions" class="player-suggestions"></div>
         </div>
         <div class="card">
             <h2>Pace Info</h2>
@@ -102,5 +98,11 @@
             <button type="submit" class="analyze-btn">Run Comparison Analysis</button>
         </div>
     </form>
+    
+    <script>
+        // Pass players data directly to global variable to avoid encoding issues
+        window.playersData = {{ players | tojson | safe }};
+    </script>
+    <script src="{{ url_for('static', filename='js/player-search.js') }}"></script>
 </body>
 {% endblock %}
