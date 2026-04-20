@@ -1,15 +1,32 @@
 from flask import Flask, render_template, request, session
 import pandas as pd
 import sqlite3
+import os
 from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
 app.permanent_session_lifetime = timedelta(hours=1)
+
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, '..'))
+
+
+def resolve_db_path():
+    candidate_paths = [
+        os.path.join(PROJECT_ROOT, 'basketball.db'),
+        os.path.join(APP_DIR, 'basketball.db'),
+    ]
+
+    for candidate_path in candidate_paths:
+        if os.path.exists(candidate_path):
+            return candidate_path
+
+    return candidate_paths[0]
 
 def get_db_data(db_name = 'basketball.db'):
     # Connect to your database file
-    conn = sqlite3.connect(db_name) 
+    conn = sqlite3.connect(db_name)
 
     query = "SELECT * FROM nba_players"
     df = pd.read_sql_query(query, conn)
@@ -17,7 +34,7 @@ def get_db_data(db_name = 'basketball.db'):
     conn.close()
     return df
 
-df = get_db_data()
+df = get_db_data(resolve_db_path())
 
 STAT_FIELDS = [
     {'key': 'fg_pct', 'label': 'Field Goal %', 'is_percent': True, 'default': '0.450', 'tip': 'Enter as decimal (e.g. 0.455)'},
@@ -153,5 +170,6 @@ def analytics():
     )
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
 

@@ -34,3 +34,16 @@ Start the web app from the root folder: python my_flask_app/app.py
 If PowerShell blocks activation, run `.\.venv\Scripts\activate.bat` from Command Prompt instead.
 
 Open http://127.0.0.1:5000/ in your browser
+
+### Deploy on Render
+1. Push the repo to GitHub.
+2. Log in to Render and create a new Web Service from the GitHub repo.
+3. Let Render use the `render.yaml` blueprint in the repo root.
+4. The build command installs dependencies and rebuilds the SQLite database with `init_db.py`.
+5. The start command runs `gunicorn my_flask_app.app:app`.
+6. Render will create the `SECRET_KEY` environment variable automatically from the blueprint.
+7. Deploy the service and open the generated Render URL.
+
+If you deploy manually instead of using the blueprint, use:
+- Build command: `python -m pip install -r my_flask_app/requirements.txt && python init_db.py`
+- Start command: `gunicorn my_flask_app.app:app`

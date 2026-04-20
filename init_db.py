@@ -2,6 +2,8 @@ import sqlite3
 import pandas as pd
 import os
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
     """
     Imports NBA player statistics from a CSV file into a SQLite database.
@@ -25,6 +27,9 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
     """
     
     # Check if file exists before processing to provide a clear error message
+    csv_filepath = csv_filepath if os.path.isabs(csv_filepath) else os.path.join(BASE_DIR, csv_filepath)
+    db_name = db_name if os.path.isabs(db_name) else os.path.join(BASE_DIR, db_name)
+
     if not os.path.exists(csv_filepath):
         print(f"Error: The file '{csv_filepath}' was not found.")
         return
@@ -79,8 +84,8 @@ def import_csv_to_sql(csv_filepath='nba_stats.csv', db_name='basketball.db'):
         df = df.fillna(0)
 
         # Write the cleaned DataFrame to the 'nba_players' table.
-        # 'if_exists=append' allows you to keep existing data and add new records.
-        df.to_sql('nba_players', conn, if_exists='append', index=False)
+        # 'if_exists=replace' keeps deploys idempotent so the build does not duplicate rows.
+        df.to_sql('nba_players', conn, if_exists='replace', index=False)
         
         print(f"Successfully imported {len(df)} players with all attributes.")
 
