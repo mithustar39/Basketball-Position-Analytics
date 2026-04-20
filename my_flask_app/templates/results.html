@@ -7,15 +7,9 @@
 	<a href="{{ url_for('analytics') }}" class="back-button">← Back to Analytics</a>
 	<h1>Analysis Results</h1>
 
-	{% if selected_rows %}
+	{% if stats %}
 	<div class="card results-card">
-		<h2>
-			{% if compare_player %}
-				Selected Stats vs {{ compare_player.player_name }}
-			{% else %}
-				Selected Stats
-			{% endif %}
-		</h2>
+		<h2>Your Submitted Averages</h2>
 		<ul class="stats-list">
 			<li><strong>Field Goal %:</strong> {{ (stats.fg_pct * 100)|round(1) }}%</li>
 			<li><strong>3-Point %:</strong> {{ (stats.three_p_pct * 100)|round(1) }}%</li>
@@ -33,59 +27,143 @@
 	{% if compare_player %}
 	<div class="card compare-card">
 		<h2>Comparison: {{ compare_player.player_name }}</h2>
-		<ul class="stats-list">
-			<li><strong>Field Goal %:</strong> {{ (compare_player.fg_pct * 100)|round(1) }}%</li>
-			<li><strong>3-Point %:</strong> {{ (compare_player.three_p_pct * 100)|round(1) }}%</li>
-			<li><strong>Points (PPG):</strong> {{ compare_player.pts|round(1) }}</li>
-			<li><strong>Assists:</strong> {{ compare_player.ast|round(1) }}</li>
-			<li><strong>Rebounds:</strong> {{ compare_player.trb|round(1) }}</li>
-			<li><strong>Steals:</strong> {{ compare_player.stl|round(1) }}</li>
-			<li><strong>Blocks:</strong> {{ compare_player.blk|round(1) }}</li>
-			<li><strong>Turnovers:</strong> {{ compare_player.tov|round(1) }}</li>
-			<li><strong>Fouls:</strong> {{ compare_player.pf|round(1) }}</li>
+		
+		<!-- Radar Chart Section -->
+		<div class="radar-chart-container" style="margin: 30px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+			<canvas id="comparisonRadarChart" 
+				data-user-stats='{{ {
+					"fg_pct": stats.fg_pct,
+					"three_p_pct": stats.three_p_pct,
+					"stl": stats.stl,
+					"blk": stats.blk,
+					"tov": stats.tov,
+					"pf": stats.pf,
+					"pts": stats.pts,
+					"ast": stats.ast,
+					"trb": stats.trb
+				}|tojson }}'
+				data-player-stats='{{ {
+					"player_name": compare_player.player_name,
+					"fg_pct": compare_player.fg_pct,
+					"three_p_pct": compare_player.three_p_pct,
+					"stl": compare_player.stl,
+					"blk": compare_player.blk,
+					"tov": compare_player.tov,
+					"pf": compare_player.pf,
+					"pts": compare_player.pts,
+					"ast": compare_player.ast,
+					"trb": compare_player.trb
+				}|tojson }}'
+				style="max-height: 500px;"></canvas>
+		</div>
+		
+		<h3>Normalized-to-Points Comparison (stat / PTS)</h3>
+		<p class="muted">Shows each stat per point, then compares your per-point value to the player's (You / Player).</p>
+		<ul class="stats-list normalized">
+			{% set pairs = ['ast','trb','stl','blk','tov','pf'] %}
+			{% for key in pairs %}
+				<li>
+					<strong>{{ key|upper() }} per point:</strong>
+					{% set user_pts = stats.pts if stats.pts and stats.pts != 0 else None %}
+					{% set player_pts = compare_player.pts if compare_player.pts and compare_player.pts != 0 else None %}
+					{% set user_val = (stats[key] / stats.pts) if user_pts else None %}
+					{% set player_val = (compare_player[key] / compare_player.pts) if player_pts else None %}
+					<span>
+						User: {% if user_val is not none %}{{ user_val|round(3) }}{% else %}N/A{% endif %}
+						— Player: {% if player_val is not none %}{{ player_val|round(3) }}{% else %}N/A{% endif %}
+					</span>
+				{% if user_val is not none and player_val is not none and user_val != 0 %}
+					<span> — Ratio: {{ (player_val / user_val)|round(2) }}x</span>
+					{% else %}
+						<span> — Ratio: N/A</span>
+					{% endif %}
+				</li>
+			{% endfor %}
 		</ul>
 
-		<h3>Ratios (You / {{ compare_player.player_name }})</h3>
-		<ul class="stats-list differences">
-			<li><strong>Points ratio:</strong>
-				{% if compare_player.pts and compare_player.pts != 0 %}
-					{{ (stats.pts / compare_player.pts)|round(2) }}x
+		<h3>Per-36 Minutes Comparison</h3>
+		<p class="muted">Stats scaled to 36 minutes per game (NBA standard).</p>
+		<ul class="stats-list per36">
+			{% set stats_to_scale = ['pts','ast','trb','stl','blk','tov'] %}
+			{% for key in stats_to_scale %}
+				<li>
+					<strong>{{ key|upper() }} per 36 min:</strong>
+					{% set user_min = stats.minutes if stats.minutes and stats.minutes != 0 else 36 %}
+					{% set player_min = compare_player.mp if compare_player.mp and compare_player.mp != 0 else 36 %}
+					{% set user_per36 = (stats[key] / user_min * 36) %}
+					{% set player_per36 = (compare_player[key] / player_min * 36) %}
+					<span>
+						User: {{ user_per36|round(2) }} — Player: {{ player_per36|round(2) }}
+					</span>
+				{% if user_per36 != 0 %}
+					<span> — Ratio: {{ (player_per36 / user_per36)|round(2) }}x</span>
+					{% else %}
+						<span> — Ratio: N/A</span>
+					{% endif %}
+				</li>
+			{% endfor %}
+		</ul>
+
+		<h3>True Shooting % (TS%)</h3>
+		<p class="muted">Efficiency metric: PTS / (2 × (FGA + 0.44 × FTA)). Higher is better.</p>
+		<ul class="stats-list efficiency">
+			<li>
+				<strong>Your TS%:</strong>
+				{% set user_denominator = 2 * (stats.fg_attempts + 0.44 * stats.ft_attempts) %}
+				{% if user_denominator != 0 %}
+					{{ ((stats.pts / user_denominator) * 100)|round(1) }}%
 				{% else %}
-					<span>{{ row.user_display }}</span>
+					N/A
 				{% endif %}
 			</li>
-			{% endfor %}
+			<li>
+				<strong>Player TS%:</strong>
+				{% set player_fga = compare_player.fg_attempts if compare_player.fg_attempts else 0 %}
+				{% set player_fta = compare_player.ft_attempts if compare_player.ft_attempts else 0 %}
+				{% set player_denominator = 2 * (player_fga + 0.44 * player_fta) %}
+				{% if player_denominator != 0 %}
+					{{ ((compare_player.pts / player_denominator) * 100)|round(1) }}%
+				{% else %}
+					N/A
+				{% endif %}
+			</li>
 		</ul>
-	</div>
-	{% else %}
-	<div class="card results-card">
-		<h2>No selected stats</h2>
-		<p>No stat values were submitted. Go back and choose the stats you want to compare.</p>
+
+		<h3>Assist-to-Turnover Ratio</h3>
+		<p class="muted">Playmaking efficiency: AST / TOV. Higher is better.</p>
+		<ul class="stats-list ast-to">
+			<li>
+				<strong>Your A/TO:</strong>
+				{% if stats.tov != 0 %}
+					{{ (stats.ast / stats.tov)|round(2) }}
+				{% else %}
+					∞ (no turnovers)
+				{% endif %}
+			</li>
+			<li>
+				<strong>Player A/TO:</strong>
+				{% if compare_player.tov != 0 %}
+					{{ (compare_player.ast / compare_player.tov)|round(2) }}
+				{% else %}
+					∞ (no turnovers)
+				{% endif %}
+			</li>
+			<li>
+				<strong>Comparison:</strong>
+				{% set user_ato = (stats.ast / stats.tov) if stats.tov != 0 else None %}
+				{% set player_ato = (compare_player.ast / compare_player.tov) if compare_player.tov != 0 else None %}
+				{% if user_ato is not none and player_ato is not none %}
+					{{ (player_ato / user_ato)|round(2) }}x
+				{% else %}
+					N/A
+				{% endif %}
+			</li>
+		</ul>
 	</div>
 	{% endif %}
-
-	<div class="card compare-card">
-		<h2>Missing / Omitted Stats</h2>
-		<p class="muted">These stats were left blank or not included, so they were not shown in the main comparison.</p>
-		{% if missing_rows %}
-		<ul class="stats-list missing-list">
-			{% for row in missing_rows %}
-			<li>
-				<strong>{{ row.label }}:</strong>
-				<span>{{ row.reason }}</span>
-			</li>
-			{% endfor %}
-		</ul>
-		{% else %}
-		<p class="muted">No missing stats.</p>
-		{% endif %}
-	</div>
-
-	{% if compare_player_name and not compare_player %}
-	<div class="card results-card">
-		<h2>Compare Player Not Found</h2>
-		<p>No player matched "{{ compare_player_name }}". The selected stats above still reflect your submitted values.</p>
-	</div>
+	{% else %}
+	<p>No statistics were submitted. Please return to the analytics form.</p>
+	<a href="{{ url_for('analytics') }}" class="btn">Enter Stats</a>
 	{% endif %}
 </div>
 {% endblock %}
