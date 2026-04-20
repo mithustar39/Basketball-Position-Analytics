@@ -5,7 +5,6 @@ from datetime import datetime
 from average_stat import positions
 
 def get_user_stats():
-    """Prompts user for specific NBA metrics and normalizes by game length."""
     print("\n--- Enter Your Per-Game Stats ---")
     
     fg_pct = float(input("Field Goal Percentage (e.g., 0.45): "))
@@ -19,7 +18,6 @@ def get_user_stats():
     trb = float(input("Total Rebounds: "))
     game_min = int(input("Game Length (minutes): "))
 
-    # Normalizing stats per minute to ensure fair comparison
     user_stats = {
         'Field Goal Percentage': fg_pct,
         '3P%': three_p_pct,
@@ -34,7 +32,6 @@ def get_user_stats():
     return user_stats
 
 def find_best_position_fit(user_stats, positions):
-    """Analyzes user stats against database averages and returns skill placement."""
     comparisons = [[0]*9 for _ in range(5)]
     stat_keys = ['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']
 
@@ -51,23 +48,19 @@ def find_best_position_fit(user_stats, positions):
 
     print(f"\n--- Best Position Fit: {best_pos} ---")
 
-    # Determine skills to improve vs skills above average
-    # We sort the percentage differences for the best fitting position
     sorted_stats = [x for _, x in sorted(zip(comparisons[bestFitIndex], stat_keys))]
     
-    aboveAve = ", ".join(sorted_stats[:3])  # Top 3 relative to position
-    improve = ", ".join(sorted_stats[-3:])   # Bottom 3 relative to position
+    aboveAve = ", ".join(sorted_stats[:3])
+    improve = ", ".join(sorted_stats[-3:])
 
     return best_pos, improve, aboveAve
 
 def find_ideal_player_match(user_stats, db_name='basketball.db'):
-    """Finds the closest NBA player match and returns the name and distance."""
     try:
         conn = sqlite3.connect(db_name)
         df = pd.read_sql("SELECT * FROM nba_players", conn)
         conn.close()
 
-        # Map user_stats keys to DB column names
         mapping = {
             'Field Goal Percentage': 'fg_pct', '3P%': 'three_p_pct', 'STL': 'stl',
             'BLK': 'blk', 'TOV': 'tov', 'PF': 'pf', 'Points': 'pts', 'AST': 'ast', 'TRB': 'trb'
@@ -79,7 +72,6 @@ def find_ideal_player_match(user_stats, db_name='basketball.db'):
         means, stds = df_numeric.mean(), df_numeric.std()
         df_standardized = (df_numeric - means) / stds
         
-        # Prepare user vector
         user_vector = np.array([user_stats[k] for k in mapping.keys()])
         user_standardized = (user_vector - means.values) / stds.values
 
@@ -93,13 +85,51 @@ def find_ideal_player_match(user_stats, db_name='basketball.db'):
         print(f"Match Error: {e}")
         return "Unknown", 0
 
+def compareSpecificPlayer(user_stats, statTypes): 
+    
+    conn  = sqlite3.connect('basketball.db')
+    
+    cursor = conn.cursor()
+    
+    playerName = input("Please enter the first and last name of the player you wish to compare with: ")
+    playerStats = {}
+    
+    cursor.execute("SELECT * FROM nba_players WHERE player_name = ?", (playerName,))
+    player = cursor.fetchone()
+
+    if player:
+        columns = [description[0] for description in cursor.description]
+        player_dict = dict(zip(columns, player))
+    else:
+        print("Player not found.")
+
+    comparisonsSpecific = [[0]*len(statTypes) for _ in range(1)]
+
+    statNameTemp = ['fg_pct', 'three_p_pct', 'stl', 'blk', 'tov', 'pf', 'pts', 'ast', 'orb']
+    stat_map = dict(zip(statTypes, statNameTemp))
+
+    for stat in statTypes:
+        db_key = stat_map[stat]
+        player_dict[db_key] = float(player_dict.get(db_key, 0))
+
+    for a, stat in enumerate(statTypes):
+        user_val = user_stats[stat]
+        player_val = player_dict[stat_map[stat]]
+        comparisonsSpecific[0][a] = (user_val - player_val) / player_val if player_val != 0 else 0
+
+    absComparisons = np.abs(comparisonsSpecific)
+    playerComparisons = np.mean(absComparisons, axis=1)
+
+    print("Mean Percent Difference:")
+    print(playerComparisons)
+
+    conn.close()
+
 def update_user_data_stats(user_stats, best_pos, improve, aboveAve, player_match, db_name='player.db'):
-    """Creates a user_analysis table and stores all collected data."""
     try:
         conn = sqlite3.connect(db_name)
         cursor = conn.cursor()
 
-        # Create table if it doesn't exist
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_analysis (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -112,7 +142,6 @@ def update_user_data_stats(user_stats, best_pos, improve, aboveAve, player_match
             )
         ''')
 
-        # Insert the data
         cursor.execute('''
             INSERT INTO user_analysis (timestamp, points_per_min, best_position, skills_above_avg, skills_to_improve, nba_comparison)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -133,7 +162,6 @@ def update_user_data_stats(user_stats, best_pos, improve, aboveAve, player_match
         print(f"Database error: {e}")
 
 def initialize_user_db(db_name='player.db'):
-    """Ensures the player.db has the correct table structure before we start."""
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
     cursor.execute('''
@@ -151,14 +179,9 @@ def initialize_user_db(db_name='player.db'):
     conn.close()
 
 def generate_user_dashboard(db_name='basketball.db'):
-    """
-    Retrieves and visualizes historical user data to show progress over time.
-    Provides a 'Retrospective' of skill placement and growth.
-    """
     try:
         conn = sqlite3.connect(db_name)
         
-        # Load the user's history
         query = "SELECT * FROM user_analysis ORDER BY timestamp DESC"
         history_df = pd.read_sql(query, conn)
         conn.close()
@@ -171,29 +194,23 @@ def generate_user_dashboard(db_name='basketball.db'):
         print("          USER PERFORMANCE DASHBOARD          ")
         print("="*45)
 
-        # 1. Summary Metrics
         total_sessions = len(history_df)
         most_common_pos = history_df['best_position'].mode()[0]
         
         print(f"Total Sessions Logged: {total_sessions}")
         print(f"Primary Skill Identity: {most_common_pos}")
 
-        # 2. Progress Logic (Comparing first session to last)
         if total_sessions > 1:
-            # Latest session is at index 0 because of 'ORDER BY timestamp DESC'
             latest_pts = history_df.iloc[0]['points_per_min']
             initial_pts = history_df.iloc[-1]['points_per_min']
             improvement = ((latest_pts - initial_pts) / initial_pts) * 100
             
             print(f"Scoring Efficiency Trend: {improvement:+.1f}% since first session")
 
-        # 3. Retrospective Skill History
         print("\n--- Recent Skill Analysis History ---")
-        # Displaying the last 5 entries in a clean table format
         summary_table = history_df[['timestamp', 'best_position', 'nba_comparison']].head(5)
         print(summary_table.to_string(index=False))
 
-        # 4. Action Items (Based on the most recent assessment)
         recent_improve = history_df.iloc[0]['skills_to_improve']
         print(f"\nFocus Areas for Next Practice: \n-> {recent_improve}")
         print("="*45)
@@ -202,36 +219,25 @@ def generate_user_dashboard(db_name='basketball.db'):
         print(f"Dashboard Error: {e}")
 
 def clear_player_data(db_name='player.db'):
-    """
-    Safely deletes all records from the user_analysis table.
-    """
-    # Double-check confirmation
-    confirm = input("\n⚠️ WARNING: This will delete ALL your saved progress. Type 'DELETE' to confirm: ")
+    confirm = input("\n WARNING: This will delete ALL your saved progress. Type 'DELETE' to confirm: ")
     
     if confirm == 'DELETE':
         try:
             conn = sqlite3.connect(db_name)
             cursor = conn.cursor()
             
-            # TRUNCATE equivalent in SQLite
             cursor.execute("DELETE FROM user_analysis")
-            
-            # Also reset the auto-increment ID counter to 1
             cursor.execute("DELETE FROM sqlite_sequence WHERE name='user_analysis'")
             
             conn.commit()
             conn.close()
-            print("\n✅ Database cleared successfully. You are starting with a clean slate.")
+            print("\n Database cleared successfully. You are starting with a clean slate.")
         except sqlite3.Error as e:
             print(f"Error clearing database: {e}")
     else:
         print("\nOperation cancelled. Your data is safe.")
 
 def main_menu():
-    """
-    The central hub for the application. 
-    Routes the user between data entry, analysis, and the dashboard.
-    """
     DB_NBA = 'basketball.db'
     DB_USER = 'player.db'
     Running = True 
@@ -243,22 +249,16 @@ def main_menu():
         print("1. Log New Game Stats")
         print("2. View Progress Dashboard")
         print("3. Delete Existing Player Data")
-        print("4. Exit")
+        print("4. Compare to Specific NBA Player")
+        print("5. Exit")
         
         choice = input("\nSelect an option (1-3): ")
 
         if choice == '1':
-            # 1. Collect
             stats = get_user_stats()
-            
-            # 2. Analyze (Requires positions list from your average_stat file)
             best_pos, to_improve, excels_in = find_best_position_fit(stats, positions)
-            
-            # 3. Match (Checking against the NBA database)
             player_name, distance = find_ideal_player_match(stats, db_name=DB_NBA)
             print(f"\nYour closest NBA twin is: {player_name}")
-            
-            # 4. Save (Storing in the User database)
             update_user_data_stats(stats, best_pos, to_improve, excels_in, player_name, db_name=DB_USER)
             
         elif choice == '2':
@@ -266,10 +266,15 @@ def main_menu():
             
         elif choice == '3':
             clear_player_data(db_name=DB_USER)
-        
+
         elif choice == '4':
+            stats = get_user_stats()
+            stat_keys = ['Field Goal Percentage', '3P%', 'STL', 'BLK', 'TOV', 'PF', 'Points', 'AST', 'TRB']
+            compareSpecificPlayer(stats, stat_keys)
+        
+        elif choice == '5':
             print("Keep practicing. Goodbye!")
-            running = False
+            Running = False
 
         else:
             print("Invalid choice. Please try again.")
