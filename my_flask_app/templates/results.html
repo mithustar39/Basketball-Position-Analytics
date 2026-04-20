@@ -17,11 +17,39 @@
 			{% endif %}
 		</h2>
 		<ul class="stats-list">
-			{% for row in selected_rows %}
-			<li>
-				<strong>{{ row.label }}:</strong>
-				{% if compare_player %}
-					<span>You: {{ row.user_display }}{% if row.compare_display is defined %} | Player: {{ row.compare_display }}{% endif %}</span>
+			<li><strong>Field Goal %:</strong> {{ (stats.fg_pct * 100)|round(1) }}%</li>
+			<li><strong>3-Point %:</strong> {{ (stats.three_p_pct * 100)|round(1) }}%</li>
+			<li><strong>Points (PPG):</strong> {{ stats.pts|round(1) }}</li>
+			<li><strong>Assists:</strong> {{ stats.ast|round(1) }}</li>
+			<li><strong>Rebounds:</strong> {{ stats.trb|round(1) }}</li>
+			<li><strong>Steals:</strong> {{ stats.stl|round(1) }}</li>
+			<li><strong>Blocks:</strong> {{ stats.blk|round(1) }}</li>
+			<li><strong>Turnovers:</strong> {{ stats.tov|round(1) }}</li>
+			<li><strong>Fouls:</strong> {{ stats.pf|round(1) }}</li>
+		</ul>
+	</div>
+
+	<!-- in-page return buttons removed; use top navigation instead -->
+	{% if compare_player %}
+	<div class="card compare-card">
+		<h2>Comparison: {{ compare_player.player_name }}</h2>
+		<ul class="stats-list">
+			<li><strong>Field Goal %:</strong> {{ (compare_player.fg_pct * 100)|round(1) }}%</li>
+			<li><strong>3-Point %:</strong> {{ (compare_player.three_p_pct * 100)|round(1) }}%</li>
+			<li><strong>Points (PPG):</strong> {{ compare_player.pts|round(1) }}</li>
+			<li><strong>Assists:</strong> {{ compare_player.ast|round(1) }}</li>
+			<li><strong>Rebounds:</strong> {{ compare_player.trb|round(1) }}</li>
+			<li><strong>Steals:</strong> {{ compare_player.stl|round(1) }}</li>
+			<li><strong>Blocks:</strong> {{ compare_player.blk|round(1) }}</li>
+			<li><strong>Turnovers:</strong> {{ compare_player.tov|round(1) }}</li>
+			<li><strong>Fouls:</strong> {{ compare_player.pf|round(1) }}</li>
+		</ul>
+
+		<h3>Ratios (You / {{ compare_player.player_name }})</h3>
+		<ul class="stats-list differences">
+			<li><strong>Points ratio:</strong>
+				{% if compare_player.pts and compare_player.pts != 0 %}
+					{{ (stats.pts / compare_player.pts)|round(2) }}x
 				{% else %}
 					<span>{{ row.user_display }}</span>
 				{% endif %}

@@ -5,7 +5,7 @@ from datetime import timedelta
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'
-app.permanent_session_lifetime = timedelta(days=365)
+app.permanent_session_lifetime = timedelta(hours=1)
 
 def get_db_data(db_name = 'basketball.db'):
     # Connect to your database file
