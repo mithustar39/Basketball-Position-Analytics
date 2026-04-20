@@ -27,6 +27,36 @@
 	{% if compare_player %}
 	<div class="card compare-card">
 		<h2>Comparison: {{ compare_player.player_name }}</h2>
+		
+		<!-- Radar Chart Section -->
+		<div class="radar-chart-container" style="margin: 30px 0; padding: 20px; background: #f9f9f9; border-radius: 8px;">
+			<canvas id="comparisonRadarChart" 
+				data-user-stats='{{ {
+					"fg_pct": stats.fg_pct,
+					"three_p_pct": stats.three_p_pct,
+					"stl": stats.stl,
+					"blk": stats.blk,
+					"tov": stats.tov,
+					"pf": stats.pf,
+					"pts": stats.pts,
+					"ast": stats.ast,
+					"trb": stats.trb
+				}|tojson }}'
+				data-player-stats='{{ {
+					"player_name": compare_player.player_name,
+					"fg_pct": compare_player.fg_pct,
+					"three_p_pct": compare_player.three_p_pct,
+					"stl": compare_player.stl,
+					"blk": compare_player.blk,
+					"tov": compare_player.tov,
+					"pf": compare_player.pf,
+					"pts": compare_player.pts,
+					"ast": compare_player.ast,
+					"trb": compare_player.trb
+				}|tojson }}'
+				style="max-height: 500px;"></canvas>
+		</div>
+		
 		<ul class="stats-list">
 			<li><strong>Field Goal %:</strong> {{ (compare_player.fg_pct * 100)|round(1) }}%</li>
 			<li><strong>3-Point %:</strong> {{ (compare_player.three_p_pct * 100)|round(1) }}%</li>
