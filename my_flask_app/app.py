@@ -56,7 +56,16 @@ def health():
 def home():
     filtered_df = df.copy()
     players_list = filtered_df.to_dict(orient='records')
-    return render_template('home.html', players=players_list)
+
+    avg_ppg = None
+    ppg_columns = ['pts', 'Points', 'points']
+    ppg_column = next((column for column in ppg_columns if column in filtered_df.columns), None)
+    if ppg_column is not None and not filtered_df.empty:
+        ppg_values = pd.to_numeric(filtered_df[ppg_column], errors='coerce').dropna()
+        if not ppg_values.empty:
+            avg_ppg = round(float(ppg_values.mean()), 1)
+
+    return render_template('home.html', players=players_list, avg_ppg=avg_ppg)
 
 @app.route('/players')
 def players():
