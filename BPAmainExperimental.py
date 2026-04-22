@@ -53,7 +53,54 @@ def find_best_position_fit(user_stats, positions):
     aboveAve = ", ".join(sorted_stats[:3])
     improve = ", ".join(sorted_stats[-3:])
 
-    return best_pos, improve, aboveAve
+    sorted_pairs = sorted(zip(comparisons[bestFitIndex], stat_keys))
+    worst_stats = [stat for _, stat in sorted_pairs[:3]]
+
+    print("Worst Stats:", ", ".join(worst_stats))
+
+    try:
+        conn = sqlite3.connect('basketball.db')
+        df = pd.read_sql("SELECT * FROM nba_players", conn)
+        conn.close()
+
+        mapping = {
+            'Field Goal Percentage': 'fg_pct',
+            '3P%': 'three_p_pct',
+            'STL': 'stl',
+            'BLK': 'blk',
+            'TOV': 'tov',
+            'PF': 'pf',
+            'Points': 'pts',
+            'AST': 'ast',
+            'TRB': 'trb'
+        }
+
+        best_players_for_weakness = {}
+
+        # Stats where LOWER is better
+        inverse_stats = ['TOV', 'PF']
+
+        for stat in worst_stats:
+            db_col = mapping[stat]
+            df[db_col] = df[db_col].astype(float)
+
+            if stat in inverse_stats:
+                # Lower is better
+                best_idx = df[db_col].idxmin()
+            else:
+                # Higher is better
+                best_idx = df[db_col].idxmax()
+
+            best_player_row = df.loc[best_idx]
+            best_players_for_weakness[stat] = best_player_row['player_name']
+
+        print("Best NBA Players for Your Weak Stats:")
+        for stat, player in best_players_for_weakness.items():
+            print(f"{stat}: {player}")
+
+    except Exception as e:
+        print(f"Error finding players for weak stats: {e}")
+        best_players_for_weakness = {}
 
 def find_ideal_player_match(user_stats, db_name='basketball.db'):
     try:
