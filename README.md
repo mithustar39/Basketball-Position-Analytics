@@ -45,5 +45,5 @@ Open http://127.0.0.1:5000/ in your browser
 7. Deploy the service and open the generated Render URL.
 
 If you deploy manually instead of using the blueprint, use:
-- Build command: `python -m pip install -r my_flask_app/requirements.txt && python init_db.py`
-- Start command: `gunicorn my_flask_app.app:app`
+- Build command: `python -m pip install -r requirements.txt && python init_db.py`
+- Start command: `gunicorn --chdir . my_flask_app.app:app`

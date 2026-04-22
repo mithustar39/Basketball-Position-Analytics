@@ -3,8 +3,8 @@ services:
     name: basketball-position-analytics
     env: python
     plan: free
-    buildCommand: python -m pip install -r my_flask_app/requirements.txt && python init_db.py
-    startCommand: gunicorn my_flask_app.app:app
+    buildCommand: python -m pip install -r requirements.txt && python init_db.py
+    startCommand: gunicorn --chdir . my_flask_app.app:app
     autoDeploy: true
     envVars:
       - key: SECRET_KEY
