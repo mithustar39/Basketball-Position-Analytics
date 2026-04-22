@@ -2,7 +2,10 @@ from flask import Flask, render_template, request, session
 import pandas as pd
 import sqlite3
 import os
+import logging
 from datetime import timedelta
+
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
@@ -31,12 +34,23 @@ def get_db_data(db_name=resolve_db_path()):
         query = "SELECT * FROM nba_players"
         data_frame = pd.read_sql_query(query, conn)
         conn.close()
+        app.logger.info('Loaded %s players from %s', len(data_frame), db_name)
         return data_frame
     except Exception:
+        app.logger.exception('Failed to load database from %s', db_name)
         return pd.DataFrame(columns=['player_name', 'position', 'fg_pct', 'three_p_pct', 'pts', 'ast', 'trb', 'stl', 'blk', 'tov', 'pf', 'mins_played', 'fg_attempts', 'ft_attempts'])
 
 
 df = get_db_data()
+
+
+@app.route('/health')
+def health():
+    return {
+        'status': 'ok',
+        'players_loaded': int(len(df)),
+        'db_path': resolve_db_path(),
+    }, 200
 
 @app.route('/')
 def home():
@@ -51,11 +65,12 @@ def players():
 
     filtered_df = df.copy()
 
-    if search:
-        filtered_df = filtered_df[filtered_df['player_name'].str.lower().str.contains(search)]
+    if search and 'player_name' in filtered_df.columns:
+        name_series = filtered_df['player_name'].fillna('').astype(str).str.lower()
+        filtered_df = filtered_df[name_series.str.contains(search, na=False)]
     
-    if position:
-        filtered_df = filtered_df[filtered_df['position'] == position]
+    if position and 'position' in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df['position'].fillna('').astype(str) == position]
 
     players_list = filtered_df.to_dict(orient='records')
     return render_template('players.html', players=players_list)
@@ -96,8 +111,8 @@ def analytics():
             compare_name = request.form.get('compare_player', '')
             session['compare_player_name'] = compare_name
             compare_player = None
-            if compare_name:
-                matched = df[df['player_name'] == compare_name]
+            if compare_name and 'player_name' in df.columns:
+                matched = df[df['player_name'].fillna('').astype(str) == compare_name]
                 if not matched.empty:
                     compare_player = matched.iloc[0].to_dict()
 
@@ -107,6 +122,12 @@ def analytics():
             return "Please enter valid numbers in all fields."
 
     return render_template('analytics.html', players=players_list, saved_stats=saved_stats, saved_compare_player=saved_compare_player)
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(error):
+    app.logger.exception('Unhandled exception during request: %s', error)
+    return 'Internal Server Error. Check Render logs for traceback.', 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
