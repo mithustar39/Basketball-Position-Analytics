@@ -1,3 +1,5 @@
+Live Site: https://basketball-position-analytics.onrender.com/analytics 
+
 An analytics web app being built with **Flask** and **SQLite** that uses historical NBA data to recommend positions and training plans. By analyzing patterns and performance in NBA, the program identifies where a player's physical attributes and skill sets align with professional players.
 
 ---
