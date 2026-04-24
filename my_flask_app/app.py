@@ -39,7 +39,64 @@ def get_db_data(db_name='basketball.db'):
     conn.close()
     return df
 
-df = get_db_data()
+def canonicalize_players_dataframe(raw_df):
+    """Normalize player stats columns so templates/routes can rely on stable names."""
+    aliases = {
+        'player_name': ['player_name', 'Player'],
+        'position': ['position', 'Pos', 'Position'],
+        'fg_pct': ['fg_pct', 'FG%'],
+        'three_p_pct': ['three_p_pct', '3P%'],
+        'pts': ['pts', 'PTS', 'Points'],
+        'ast': ['ast', 'AST'],
+        'trb': ['trb', 'TRB'],
+        'stl': ['stl', 'STL'],
+        'blk': ['blk', 'BLK'],
+        'tov': ['tov', 'TOV'],
+        'pf': ['pf', 'PF'],
+        'mp': ['mp', 'mins_played', 'MP', 'Mins Played'],
+        'fg_attempts': ['fg_attempts', 'FGA', 'Field Goal Attempts'],
+        'ft_attempts': ['ft_attempts', 'FTA', 'Free Throw Attempts'],
+    }
+
+    normalized = raw_df.copy()
+    for target, options in aliases.items():
+        if target in normalized.columns:
+            continue
+        for option in options:
+            if option in normalized.columns:
+                normalized[target] = normalized[option]
+                break
+
+    text_defaults = {'player_name': '', 'position': ''}
+    numeric_defaults = {
+        'fg_pct': 0.0,
+        'three_p_pct': 0.0,
+        'pts': 0.0,
+        'ast': 0.0,
+        'trb': 0.0,
+        'stl': 0.0,
+        'blk': 0.0,
+        'tov': 0.0,
+        'pf': 0.0,
+        'mp': 36.0,
+        'fg_attempts': 0.0,
+        'ft_attempts': 0.0,
+    }
+
+    for col, default in text_defaults.items():
+        if col not in normalized.columns:
+            normalized[col] = default
+        normalized[col] = normalized[col].fillna(default).astype(str)
+
+    for col, default in numeric_defaults.items():
+        if col not in normalized.columns:
+            normalized[col] = default
+        normalized[col] = pd.to_numeric(normalized[col], errors='coerce').fillna(default)
+
+    return normalized
+
+
+df = canonicalize_players_dataframe(get_db_data())
 
 
 def _get_first_present(row_dict, keys, default=None):
@@ -81,7 +138,8 @@ def normalize_compare_player(player_row):
 @app.route('/')
 def home():
     players_list = df.to_dict(orient='records')
-    return render_template('home.html', players=players_list)
+    avg_ppg = round(float(df['pts'].mean()), 1) if not df.empty else None
+    return render_template('home.html', players=players_list, avg_ppg=avg_ppg)
 
 @app.route('/players')
 def players():
