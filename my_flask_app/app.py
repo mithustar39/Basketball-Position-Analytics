@@ -38,6 +38,42 @@ def get_db_data(db_name='basketball.db'):
 
 df = get_db_data()
 
+
+def _get_first_present(row_dict, keys, default=None):
+    """Return the first non-null value found for any key in keys."""
+    for key in keys:
+        if key in row_dict:
+            value = row_dict.get(key)
+            if value is not None and not pd.isna(value):
+                return value
+    return default
+
+
+def _as_float(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def normalize_compare_player(player_row):
+    """Map raw DB/CSV columns to stable keys used by templates and charts."""
+    return {
+        'player_name': str(_get_first_present(player_row, ['player_name', 'Player'], 'Unknown Player')),
+        'fg_pct': _as_float(_get_first_present(player_row, ['fg_pct', 'FG%', 'Field Goal Percentage'], 0.0)),
+        'three_p_pct': _as_float(_get_first_present(player_row, ['three_p_pct', '3P%', 'Three Point Percentage'], 0.0)),
+        'stl': _as_float(_get_first_present(player_row, ['stl', 'STL'], 0.0)),
+        'blk': _as_float(_get_first_present(player_row, ['blk', 'BLK'], 0.0)),
+        'tov': _as_float(_get_first_present(player_row, ['tov', 'TOV'], 0.0)),
+        'pf': _as_float(_get_first_present(player_row, ['pf', 'PF'], 0.0)),
+        'pts': _as_float(_get_first_present(player_row, ['pts', 'PTS', 'Points'], 0.0)),
+        'ast': _as_float(_get_first_present(player_row, ['ast', 'AST'], 0.0)),
+        'trb': _as_float(_get_first_present(player_row, ['trb', 'TRB'], 0.0)),
+        'mp': _as_float(_get_first_present(player_row, ['mp', 'mins_played', 'MP', 'Mins Played'], 36.0), 36.0),
+        'fg_attempts': _as_float(_get_first_present(player_row, ['fg_attempts', 'FGA', 'Field Goal Attempts'], 0.0)),
+        'ft_attempts': _as_float(_get_first_present(player_row, ['ft_attempts', 'FTA', 'Free Throw Attempts'], 0.0)),
+    }
+
 # ── Public routes ─────────────────────────────────────────────────────────────
 @app.route('/')
 def home():
@@ -159,7 +195,7 @@ def analytics():
             if compare_name:
                 matched = df[df['player_name'] == compare_name]
                 if not matched.empty:
-                    compare_player = matched.iloc[0].to_dict()
+                    compare_player = normalize_compare_player(matched.iloc[0].to_dict())
 
             return render_template('results.html', stats=user_stats,
                                    compare_player=compare_player)
