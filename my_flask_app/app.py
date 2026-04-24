@@ -1,71 +1,29 @@
 from flask import Flask, render_template, request, session
 import pandas as pd
 import sqlite3
-import os
-import logging
 from datetime import timedelta
 
-logging.basicConfig(level=logging.INFO)
-
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
+app.secret_key = 'your-secret-key-change-this'
 app.permanent_session_lifetime = timedelta(hours=1)
 
-APP_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, '..'))
+def get_db_data(db_name = 'basketball.db'):
+    # Connect to your database file
+    conn = sqlite3.connect(db_name) 
 
-
-def resolve_db_path():
-    candidate_paths = [
-        os.path.join(PROJECT_ROOT, 'basketball.db'),
-        os.path.join(APP_DIR, 'basketball.db'),
-    ]
-
-    for candidate_path in candidate_paths:
-        if os.path.exists(candidate_path):
-            return candidate_path
-
-    return candidate_paths[0]
-
-
-def get_db_data(db_name=resolve_db_path()):
-    try:
-        conn = sqlite3.connect(db_name)
-        query = "SELECT * FROM nba_players"
-        data_frame = pd.read_sql_query(query, conn)
-        conn.close()
-        app.logger.info('Loaded %s players from %s', len(data_frame), db_name)
-        return data_frame
-    except Exception:
-        app.logger.exception('Failed to load database from %s', db_name)
-        return pd.DataFrame(columns=['player_name', 'position', 'fg_pct', 'three_p_pct', 'pts', 'ast', 'trb', 'stl', 'blk', 'tov', 'pf', 'mins_played', 'fg_attempts', 'ft_attempts'])
-
+    query = "SELECT * FROM nba_players"
+    df = pd.read_sql_query(query, conn)
+    
+    conn.close()
+    return df
 
 df = get_db_data()
-
-
-@app.route('/health')
-def health():
-    return {
-        'status': 'ok',
-        'players_loaded': int(len(df)),
-        'db_path': resolve_db_path(),
-    }, 200
 
 @app.route('/')
 def home():
     filtered_df = df.copy()
     players_list = filtered_df.to_dict(orient='records')
-
-    avg_ppg = None
-    ppg_columns = ['pts', 'Points', 'points']
-    ppg_column = next((column for column in ppg_columns if column in filtered_df.columns), None)
-    if ppg_column is not None and not filtered_df.empty:
-        ppg_values = pd.to_numeric(filtered_df[ppg_column], errors='coerce').dropna()
-        if not ppg_values.empty:
-            avg_ppg = round(float(ppg_values.mean()), 1)
-
-    return render_template('home.html', players=players_list, avg_ppg=avg_ppg)
+    return render_template('home.html', players=players_list)
 
 @app.route('/players')
 def players():
@@ -74,12 +32,11 @@ def players():
 
     filtered_df = df.copy()
 
-    if search and 'player_name' in filtered_df.columns:
-        name_series = filtered_df['player_name'].fillna('').astype(str).str.lower()
-        filtered_df = filtered_df[name_series.str.contains(search, na=False)]
+    if search:
+        filtered_df = filtered_df[filtered_df['player_name'].str.lower().str.contains(search)]
     
-    if position and 'position' in filtered_df.columns:
-        filtered_df = filtered_df[filtered_df['position'].fillna('').astype(str) == position]
+    if position:
+        filtered_df = filtered_df[filtered_df['position'] == position]
 
     players_list = filtered_df.to_dict(orient='records')
     return render_template('players.html', players=players_list)
@@ -120,8 +77,8 @@ def analytics():
             compare_name = request.form.get('compare_player', '')
             session['compare_player_name'] = compare_name
             compare_player = None
-            if compare_name and 'player_name' in df.columns:
-                matched = df[df['player_name'].fillna('').astype(str) == compare_name]
+            if compare_name:
+                matched = df[df['player_name'] == compare_name]
                 if not matched.empty:
                     compare_player = matched.iloc[0].to_dict()
 
@@ -132,12 +89,5 @@ def analytics():
 
     return render_template('analytics.html', players=players_list, saved_stats=saved_stats, saved_compare_player=saved_compare_player)
 
-
-@app.errorhandler(Exception)
-def handle_unexpected_error(error):
-    app.logger.exception('Unhandled exception during request: %s', error)
-    return 'Internal Server Error. Check Render logs for traceback.', 500
-
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(debug=True)
