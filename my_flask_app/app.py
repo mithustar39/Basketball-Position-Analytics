@@ -1,93 +1,187 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from models import db, User, UserStats
 import pandas as pd
 import sqlite3
 from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'
+app.secret_key = 'your-secret-key-change-this'  # Change this in production!
 app.permanent_session_lifetime = timedelta(hours=1)
 
-def get_db_data(db_name = 'basketball.db'):
-    # Connect to your database file
-    conn = sqlite3.connect(db_name) 
+# ── SQLAlchemy config (stores users in a separate users.db) ──────────────────
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db.init_app(app)
 
+# ── Flask-Login setup ────────────────────────────────────────────────────────
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'          # redirect here if not authenticated
+login_manager.login_message = 'Please log in to access the Analytics page.'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# ── Create tables on first run ───────────────────────────────────────────────
+with app.app_context():
+    db.create_all()
+
+# ── NBA data ─────────────────────────────────────────────────────────────────
+def get_db_data(db_name='basketball.db'):
+    conn = sqlite3.connect(db_name)
     query = "SELECT * FROM nba_players"
     df = pd.read_sql_query(query, conn)
-    
     conn.close()
     return df
 
 df = get_db_data()
 
+# ── Public routes ─────────────────────────────────────────────────────────────
 @app.route('/')
 def home():
-    filtered_df = df.copy()
-    players_list = filtered_df.to_dict(orient='records')
+    players_list = df.to_dict(orient='records')
     return render_template('home.html', players=players_list)
 
 @app.route('/players')
 def players():
     search = request.args.get('search', '').lower()
     position = request.args.get('position', '')
-
     filtered_df = df.copy()
-
     if search:
         filtered_df = filtered_df[filtered_df['player_name'].str.lower().str.contains(search)]
-    
     if position:
         filtered_df = filtered_df[filtered_df['position'] == position]
-
     players_list = filtered_df.to_dict(orient='records')
     return render_template('players.html', players=players_list)
 
-@app.route('/analytics', methods=['GET', 'POST'])
-def analytics():
-    session.permanent = True
-    # Provide players for the select dropdown
-    players_list = df.to_dict(orient='records')
-
-    # Retrieve saved stats from session
-    saved_stats = session.get('user_stats', {})
-    saved_compare_player = session.get('compare_player_name', '')
+# ── Auth routes ───────────────────────────────────────────────────────────────
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('analytics'))
 
     if request.method == 'POST':
-        # grab the numbers table (input comes in as strings)
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        confirm  = request.form.get('confirm_password', '')
+
+        if not username or not password:
+            flash('Username and password are required.', 'error')
+        elif len(password) < 6:
+            flash('Password must be at least 6 characters.', 'error')
+        elif password != confirm:
+            flash('Passwords do not match.', 'error')
+        elif User.query.filter_by(username=username).first():
+            flash('Username already taken. Please choose another.', 'error')
+        else:
+            user = User(username=username)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            flash('Account created! You can now log in.', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('analytics'))
+
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        remember = request.form.get('remember') == 'on'
+
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user, remember=remember)
+            # Redirect back to the page they originally tried to visit
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('analytics'))
+        else:
+            flash('Invalid username or password.', 'error')
+
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('login'))
+
+# ── Protected route ───────────────────────────────────────────────────────────
+@app.route('/analytics', methods=['GET', 'POST'])
+@login_required
+def analytics():
+    players_list = df.to_dict(orient='records')
+
+    # Load this user's saved stats from DB
+    user_stats_row = UserStats.query.filter_by(user_id=current_user.id).first()
+
+    if request.method == 'POST':
         try:
             minutes = float(request.form.get('minutes', 36))
             user_stats = {
-                'fg_pct': float(request.form.get('fg_pct', 0)),
+                'fg_pct':      float(request.form.get('fg_pct', 0)),
                 'three_p_pct': float(request.form.get('three_p_pct', 0)),
-                'pts': float(request.form.get('pts', 0)),
-                'ast': float(request.form.get('ast', 0)),
-                'trb': float(request.form.get('trb', 0)),
-                'stl': float(request.form.get('stl', 0)),
-                'blk': float(request.form.get('blk', 0)),
-                'tov': float(request.form.get('tov', 0)),
-                'pf': float(request.form.get('pf', 0)),
-                'minutes': minutes,
+                'pts':         float(request.form.get('pts', 0)),
+                'ast':         float(request.form.get('ast', 0)),
+                'trb':         float(request.form.get('trb', 0)),
+                'stl':         float(request.form.get('stl', 0)),
+                'blk':         float(request.form.get('blk', 0)),
+                'tov':         float(request.form.get('tov', 0)),
+                'pf':          float(request.form.get('pf', 0)),
+                'minutes':     minutes,
                 'fg_attempts': float(request.form.get('fg_attempts', 15)),
-                'ft_attempts': float(request.form.get('ft_attempts', 5))
+                'ft_attempts': float(request.form.get('ft_attempts', 5)),
             }
-
-            # Save stats to session
-            session['user_stats'] = user_stats
-
-            # optional compare player selected by name
             compare_name = request.form.get('compare_player', '')
-            session['compare_player_name'] = compare_name
+
+            # Save to DB — update if exists, create if not
+            if user_stats_row:
+                for key, val in user_stats.items():
+                    setattr(user_stats_row, key, val)
+                user_stats_row.compare_player = compare_name
+            else:
+                user_stats_row = UserStats(
+                    user_id=current_user.id,
+                    compare_player=compare_name,
+                    **user_stats
+                )
+                db.session.add(user_stats_row)
+            db.session.commit()
+
             compare_player = None
             if compare_name:
                 matched = df[df['player_name'] == compare_name]
                 if not matched.empty:
                     compare_player = matched.iloc[0].to_dict()
 
-            return render_template('results.html', stats=user_stats, compare_player=compare_player)
+            return render_template('results.html', stats=user_stats,
+                                   compare_player=compare_player)
 
         except ValueError:
             return "Please enter valid numbers in all fields."
 
-    return render_template('analytics.html', players=players_list, saved_stats=saved_stats, saved_compare_player=saved_compare_player)
+    # GET — load saved stats for this user's form
+    saved_stats = {}
+    saved_compare_player = ''
+    if user_stats_row:
+        saved_stats = {
+            col: getattr(user_stats_row, col)
+            for col in ['fg_pct', 'three_p_pct', 'pts', 'ast', 'trb',
+                        'stl', 'blk', 'tov', 'pf', 'minutes',
+                        'fg_attempts', 'ft_attempts']
+        }
+        saved_compare_player = user_stats_row.compare_player
+
+    return render_template('analytics.html', players=players_list,
+                           saved_stats=saved_stats,
+                           saved_compare_player=saved_compare_player)
 
 if __name__ == '__main__':
     app.run(debug=True)
