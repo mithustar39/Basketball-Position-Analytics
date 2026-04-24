@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, session, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User, UserStats
+try:
+    from .models import db, User, UserStats
+except ImportError:
+    from models import db, User, UserStats
 import pandas as pd
 import sqlite3
 from datetime import timedelta
