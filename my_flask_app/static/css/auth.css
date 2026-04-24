@@ -1,0 +1,215 @@
+/* ── auth.css — Basketball Analytics Auth Pages ───────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --court-black:  #0d0d0d;
+  --hardwood:     #b5651d;
+  --hardwood-lt:  #d4845a;
+  --chalk:        #f5f0e8;
+  --chalk-dim:    #c9c3b8;
+  --orange:       #f4631e;
+  --orange-glow:  rgba(244, 99, 30, 0.25);
+  --error-red:    #e05252;
+  --success-grn:  #52b788;
+  --info-blue:    #74b3ce;
+  --panel-bg:     rgba(22, 18, 14, 0.92);
+  --border:       rgba(181, 101, 29, 0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body.auth-page {
+  min-height: 100vh;
+  background-color: var(--court-black);
+  background-image:
+    /* court line texture */
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 59px,
+      rgba(181,101,29,0.07) 59px,
+      rgba(181,101,29,0.07) 60px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 59px,
+      rgba(181,101,29,0.07) 59px,
+      rgba(181,101,29,0.07) 60px
+    ),
+    radial-gradient(ellipse 80% 60% at 50% 50%, rgba(181,101,29,0.12) 0%, transparent 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Card ── */
+.auth-card {
+  background: var(--panel-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  width: 100%;
+  max-width: 420px;
+  padding: 3rem 2.5rem 2.5rem;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(244,99,30,0.08),
+    0 24px 64px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* orange top accent line */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--orange), transparent);
+  border-radius: 0 0 2px 2px;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.auth-header { text-align: center; margin-bottom: 2rem; }
+
+.auth-logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.25em;
+  color: var(--orange);
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.auth-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.4rem;
+  letter-spacing: 0.05em;
+  color: var(--chalk);
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+  font-size: 0.85rem;
+  color: var(--chalk-dim);
+  font-weight: 300;
+}
+
+/* ── Flash messages ── */
+.flash-messages { margin-bottom: 1.25rem; }
+
+.flash {
+  padding: 0.65rem 1rem;
+  border-radius: 3px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid;
+}
+.flash.error   { background: rgba(224,82,82,0.12); border-color: var(--error-red);   color: #f09090; }
+.flash.success { background: rgba(82,183,136,0.12); border-color: var(--success-grn); color: #90d4b0; }
+.flash.info    { background: rgba(116,179,206,0.12); border-color: var(--info-blue);  color: #a0d0e8; }
+
+/* ── Form ── */
+.auth-form { display: flex; flex-direction: column; gap: 1.1rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.form-group label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--chalk-dim);
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.75rem 1rem;
+  color: var(--chalk);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: var(--orange);
+  background: rgba(244,99,30,0.05);
+  box-shadow: 0 0 0 3px var(--orange-glow);
+}
+
+/* remember me */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--chalk-dim);
+  cursor: pointer;
+}
+.form-check input[type="checkbox"] {
+  accent-color: var(--orange);
+  width: 14px; height: 14px;
+  cursor: pointer;
+}
+
+/* ── Submit button ── */
+.btn-auth {
+  margin-top: 0.5rem;
+  padding: 0.85rem;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(244,99,30,0.3);
+}
+.btn-auth:hover {
+  background: var(--hardwood-lt);
+  box-shadow: 0 6px 24px rgba(244,99,30,0.45);
+}
+.btn-auth:active { transform: translateY(1px); }
+
+/* ── Footer link ── */
+.auth-footer {
+  margin-top: 1.75rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--chalk-dim);
+}
+.auth-footer a {
+  color: var(--orange);
+  text-decoration: none;
+  font-weight: 500;
+}
+.auth-footer a:hover { text-decoration: underline; }
+
+/* ── Back to site link ── */
+.back-link {
+  display: block;
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.78rem;
+  color: rgba(197,188,178,0.5);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--chalk-dim); }
