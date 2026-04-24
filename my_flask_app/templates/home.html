@@ -16,7 +16,7 @@
             <h3>Avg PPG</h3>
             <p class="stat-number">
                 {% if avg_ppg is not none %}
-                    {{ avg_ppg }}
+                    {{ (players|map(attribute='pts')|sum / players|length)|round(1) }}
                 {% else %}
                     N/A
                 {% endif %}
