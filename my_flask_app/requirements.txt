@@ -10,8 +10,8 @@ pandas>=2.2.2
 numpy>=1.26.4
 
 #User Authentication
-Flask-Login>=0.6.3
-SqlAlchemy>=2.0.49
+flask-login>=0.6.3
+flask-sqlAlchemy>=2.0.49
 
 # Environment Management
 python-dotenv>=1.0.1
